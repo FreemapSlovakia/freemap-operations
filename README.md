@@ -1,3 +1,5 @@
+# Freemap Operations
+
 Tento projekt slúži pre potreby Freemap Slovakia / slovenskej OSM komunity:
 
 * na [evidenciu nápadov a úloh](https://github.com/FreemapSlovakia/freemap-operations/issues)
