@@ -1,5 +1,17 @@
-// remove blank pngs
-// find . -type f -size 334c -exec md5sum {} + | grep cd37744a985b79ed29bb6269e45da27f | awk '{print $2}' | xargs rm
+
+// CONFIG {
+
+const ext = 'jpg';
+
+const baseDir = '/media/martin/OSM/orto/ofmozaika/'
+
+const extraParams = ['-quality', '90'];
+
+const minZoom = 0;
+
+const maxZoom = 19;
+
+// }
 
 // import * as path from "https://deno.land/std/path/mod.ts";
 
@@ -8,12 +20,15 @@
 // const dot = encoder.encode('.');
 // const dash = encoder.encode('-');
 
+
 const { spawn } = require('child_process');
 const { promises: fs } = require('fs');
 const path = require('path');
 
 async function generateZoom(sourceZoom) {
-  const base = '/home/martin/fm/freemap-mapnik/tiles/' + sourceZoom;
+  const base = baseDir + sourceZoom;
+
+  const baseLow = baseDir + (sourceZoom - 1);
 
   const coords = new Set();
 
@@ -50,13 +65,14 @@ async function generateZoom(sourceZoom) {
     const [x, y] = coord.split('/');
 
     const xx = x * 2;
+
     const yy = y * 2;
 
     const parts = [
-      `${base}/${xx}/${yy}.png`,
-      `${base}/${xx}/${yy + 1}.png`,
-      `${base}/${xx + 1}/${yy}.png`,
-      `${base}/${xx + 1}/${yy + 1}.png`,
+      `${base}/${xx}/${yy}.${ext}`,
+      `${base}/${xx}/${yy + 1}.${ext}`,
+      `${base}/${xx + 1}/${yy}.${ext}`,
+      `${base}/${xx + 1}/${yy + 1}.${ext}`,
     ];
 
     const fn = async () => {
@@ -72,7 +88,15 @@ async function generateZoom(sourceZoom) {
 
       // Deno.stdout.write(dot);
 
-      await fs.mkdir(`tiles/${sourceZoom - 1}/${x}`, { recursive: true });
+      try {
+        await fs.stat(`${baseLow}/${x}/${y}.${ext}`);
+
+        return;
+      } catch (err) {
+        // ignore
+      }
+
+      await fs.mkdir(`${baseLow}/${x}`, { recursive: true });
 
       for (let i = 0; i < 4; i++) {
         try {
@@ -85,6 +109,7 @@ async function generateZoom(sourceZoom) {
       // console.log('>>>');
 
       const proc = spawn('convert', [
+        ...extraParams,
         '(',
         parts[0],
         parts[2],
@@ -98,7 +123,7 @@ async function generateZoom(sourceZoom) {
         '-append',
         '-resize',
         '256x256',
-        `tiles/${sourceZoom - 1}/${x}/${y}.png`,
+        `${baseLow}/${x}/${y}.${ext}`,
       ]);
 
       proc.stdout.on('data', (data) => {
@@ -136,7 +161,7 @@ async function generateZoom(sourceZoom) {
 }
 
 async function run() {
-  for (let z = 17; z > 0; z--) {
+  for (let z = maxZoom; z > minZoom; z--) {
     console.log('Zoom:', z - 1);
 
     await generateZoom(z);
