@@ -1,0 +1,28 @@
+[Auth]
+username=
+password=
+
+[Messages]
+message = Ahoj/Hello <nick>,
+
+	(English version below)
+
+	vsimli sme si, ze si pri editovani map OpenStreetMap pouzivas editor iD s podkladom leteckych/satelitnych snimok Bing/Mapbox. Tento zdroj pre obkreslovanie dat je sice dostupny takmer pre cely svet, no na Slovensku mas moznost pouzit lepsiu alternativu. 
+
+	Radi by sme Ta preto upozornili na moznost pouzitia Ortofotomozaiky (https://www.geoportal.sk/sk/udaje/ortofotomozaika/), ktora obsahuje novsie a detailnejsie snimky. Sposob, ako si do iD tieto snimky pridas je jednoduchy: v paneli editora iD na pravej strane treba aktivovat "Nastavenia pozadia" a vybrat podklad s nazvom "Ortofotomozaika SR". Dalsie informacie o tomto podklade najdes na stranke https://www.geoportal.sk/sk/udaje/ortofotomozaika/. Tento zdroj je rovnako dostupny aj v editore JOSM.
+
+	Geodeticky a kartograficky ustav udelil suhlas na pouzitie tychto dat pre ucely mapovania OSM v roku 2020.
+
+	Tato sprava bola vygenerovana automaticky, no ak na nu zareagujes, precita ju a odpovie Ti skutocny clovek.
+
+	Jose za Freemap.sk
+
+	===
+
+	Hello <nick>,
+
+	we'd like to recommend using "Ortofotomozaika SR" imagery over Bing and/or Mapbox Sattelite due to its better resolution, accuracy and (potentially) being more up-to-date. You can switch to this source in iD setting (right-hand panel) and it is also available in JOSM editor. Further details are available at https://wiki.openstreetmap.org/wiki/WikiProject_Slovakia/Sources#Ortofotomozaika_SR_.28orthophoto_by_GK.C3.9A_and_NLC.29.
+
+	This message was generated automatically based on your recent changesets and if you chose to reply a real person will read it and respond.
+
+	Jose, Freemap.sk
