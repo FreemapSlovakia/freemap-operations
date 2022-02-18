@@ -17,9 +17,19 @@ from io import BytesIO
 from overpass import API
 
 # stiahne uzly a cesty z overpass
-api = API(timeout=300)
-query = '''( node["addr:housenumber"]["addr:street"~"[nN]ám\\\."](area:{rel});
-             way["highway"]["name"~"[nN]ám\\\."](area:{rel}););'''.format(rel=3600014296)
+api = API(timeout=1800)
+query = '''
+(
+  // adresne body/uzly
+  node["addr:street"~"[nN]ám\\\."](area:{rel});
+  // ulice
+  way[highway]["name"~"[nN]ám\\\."](area:{rel});
+  // adresy na budovach
+  way["addr:street"~"[nN]ám\\\."](area:{rel});
+  // adresy na relaciach
+  relation["addr:street"~"[nN]ám\\\."](area:{rel});
+);'''
+query = query.format(rel=3600014296)
 
 data = api.get(query=query, verbosity='meta', responseformat='xml')
 
@@ -31,13 +41,22 @@ longname_tag = {}
 for element in list(root_element):
     # preskoci neuzitocne elementy
     if element.tag in ('note', 'meta'): continue
+    name_tag = altname_tag = longname_tag = None
 
+    # adresa (addr:street) ako uzol
     if element.tag == 'node':
         name_tag = element.find('tag[@k="addr:street"]')
+    # adresa (addr:street) na budove
+    elif element.tag == 'way' and isinstance(element.find('tag[@k="addr:street"]'), ET.Element):
+        name_tag = element.find('tag[@k="addr:street"]')
+    # ulica s nazvom (name)
     elif element.tag == 'way':
         name_tag = element.find('tag[@k="name"]')
         altname_tag = element.find('tag[@k="alt_name"]')
         longname_tag = element.find('tag[@k="long_name"]')
+    # adresa ako relacia
+    elif element.tag == 'relation':
+        name_tag = element.find('tag[@k="addr:street"]')
 
     # prida priznak action=modify
     element.attrib['action'] = 'modify'
@@ -47,11 +66,11 @@ for element in list(root_element):
     name_tag.set('v', name_tag.get('v').replace('Nám.', 'Námestie'))
 
     if altname_tag is not None and name_tag.get('v') == altname_tag.get('v'):
-        print('Odstranujem altname kedze je rovnaky ako name po rozbaleni)')
+        print('Odstranujem altname kedze je rovnaky ako name po rozbaleni')
         element.remove(altname_tag)
 
     if longname_tag is not None and name_tag.get('v') == longname_tag.get('v'):
-        print('Odstranujem longname kedze je rovnaky ako name po rozbaleni)')
+        print('Odstranujem longname kedze je rovnaky ako name po rozbaleni')
         element.remove(longname_tag)
 
 with open('original.osm', 'w') as f:
