@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const earthRadius = 6378137;
 
 const circ = earthRadius * Math.PI * 2;
