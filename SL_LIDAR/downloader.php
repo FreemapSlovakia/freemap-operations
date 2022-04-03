@@ -23,7 +23,7 @@ foreach ($tiles as $tile) {
 		}
 	}
 
-	$fname = 'dmr_b' . $block . '_' . $tile;
+	$fname = 'dmr_b' . $block . '_' . $tile . '.txt';
 	file_put_contents($directry . $fname, fopen($file, 'r'));
 
 }
