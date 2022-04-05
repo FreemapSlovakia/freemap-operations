@@ -7,3 +7,6 @@ Tento projekt slúži pre potreby Freemap Slovakia / slovenskej OSM komunity:
 * ako [repozitár](https://github.com/FreemapSlovakia/freemap-operations) rôznych malých skriptov, pre ktoré je zbytočné robiť zvlášť projekt a na ktoré sa odkazuje povedzme z wiki
 
 Pre prispievanie do repozitára prosím posielajte [pull requesty](https://github.com/FreemapSlovakia/freemap-operations/pulls) a pre prispievanie do wiki nás prosím [kontaktujte](mailto:freemap@freemap.sk).
+
+**Podprojekty v repozirári**
+- SL_LIDAR - script na sťahovanie dát digitálneho modelu reliéfu pre Slovinsko
