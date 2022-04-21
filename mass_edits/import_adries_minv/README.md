@@ -45,3 +45,7 @@ $ josm Trnava/result_Trnava.osm
 # v JOSM: Ctrl-U na stiahnutie clenov ciest (bodov)
 $ firefox Trnava/index.html
 ```
+
+## Poznamka
+
+Chybu "recevied corrupt data from Overpass" je mozne riesit tymto patchom: https://github.com/mvexel/overpass-api-python-wrapper/issues/135.
