@@ -15,16 +15,21 @@ query =  [[('addr:housenumber',)], [('building',)], [('addr:conscriptionnumber',
 # ktore elementy maju byt pripadne aktualizovane (sucastou importu)
 def matches(otags, dtags):
     # uzol: pridanie supisneho cisla ku orientacnemu + ulici
-    if not otags.get('shop') and not otags.get('amenity') and not otags.get('building') and otags.get('addr:streetnumber') and otags.get('addr:street') == dtags.get('addr:street') and otags.get('addr:streetnumber') == dtags.get('addr:streetnumber'):
+    if not otags.get('shop') and not otags.get('amenity') and not otags.get('building') and otags.get('addr:streetnumber') and otags.get('addr:street') == dtags.get('addr:street') and otags.get('addr:streetnumber') == dtags.get('addr:streetnumber') and otags.get('addr:streetnumber'):
         return True
 
     # uzol: pridanie orientacneho cisla k supisnemu
     if not otags.get('shop') and not otags.get('amenity') and not otags.get('building') and otags.get('addr:conscriptionnumber') and otags.get('addr:conscriptionnumber') == dtags.get('addr:conscriptionnumber'):
         return True
 
-    # cesta: pridanie tagov na budov na budovu
-    if otags.get('building') and dtags.get('addr:streetnumber') == dtags.get('addr:streetnumber') and dtags.get('dont_tag_buildings2') == 'False':
+    # cesta: pridanie tagov na budovu
+    if otags.get('building') and dtags.get('addr:streetnumber') and dtags.get('addr:streetnumber') == otags.get('addr:streetnumber') and dtags.get('dont_tag_buildings2') == 'False':
         return True
+
+    # cesta: pridanie tagov na budovu (ak existuju len supisne cisla)
+    if otags.get('building') and dtags.get('addr:conscriptionnumber') and dtags.get('dont_tag_buildings2') == 'False':
+        return True
+
     return False
 
 def weight(obj):
