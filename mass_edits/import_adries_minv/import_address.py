@@ -66,9 +66,8 @@ import subprocess
 import sys
 import zipfile
 
-# tolerancia pri hladani najblizsich budov okolo bodu s adresou
+# tolerancia s akou sa zjednodusia hranice obce
 tolerance = 0.001
-tolerance = 0.010
 
 logging.basicConfig(level=logging.INFO)
 env = Environment(loader=FileSystemLoader("templates"))
@@ -619,8 +618,7 @@ def check_overlapping_buildings(g, city):
     duplicates = g[g.index.duplicated()]
     if len(duplicates) > 0:
         info(duplicates.geometry)
-        save_html(city=city, duplicates=duplicates.loc[:, ("lat", "lon")])
-        sys.exit()
+    return (g[~g.index.duplicated()], duplicates.loc[:, ("lat", "lon")])
 
 
 def to_datasource(g, city):
@@ -936,7 +934,7 @@ if __name__ == "__main__":
         }
     )
 
-    check_overlapping_buildings(z2, city)
+    z2, duplicates = check_overlapping_buildings(z2, city)
     to_datasource(z2, city)
 
     info("Hladam adresne body mimo budov..")

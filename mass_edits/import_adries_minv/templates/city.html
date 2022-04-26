@@ -1,8 +1,8 @@
 {%- set buff = 0.001 -%}
-{%- set webroot = "https://edit.me/%s" | format(city) -%}
+{%- set webroot = "https://proxy.freemap.sk/jose1711/%s" | format(city) -%}
 <html>
 <title>{{ city }}</title>
-<link rel="stylesheet" type="text/css" href="../../css/main.css">
+<link rel="stylesheet" type="text/css" href="../main.css">
 <meta charset="UTF-8">
 <body>
 <div class="blended_grid">
@@ -14,7 +14,7 @@
  <br>
 {{ date_generated }}</p>
 <p>
-<a href="source_{{ city }}.geojson">MINV: {{ z | length }}</a>
+<a href="source_{{ city }}.geojson">MINV: {{ z2 | length }}</a>
  <a href="http://localhost:8111/import?url={{ webroot }}/source_{{ city }}.geojson">(JOSM)</a>
 <br>
 {{ date_minv }}</p>
@@ -41,7 +41,6 @@ Zoznam adries (jedna položka na riadok) popisujúci, čo sa s každou adresou u
 {% if bbox | length %}
 <iframe src="https://www.freemap.sk/?map=13/{{ (bbox[1] + bbox[3]) / 2 }}/{{ (bbox[0] + bbox[2]) / 2 }}&layers=Xe&embed=noMapSwitch,noLocateMe" style="width: 100%; height: 300px; border: 0"></iframe>
 {% endif %}
-</div>
 
 {% if duplicates | length %}
 <h2>Prekrývajúce sa budovy</h2>
@@ -52,7 +51,8 @@ Zoznam adries (jedna položka na riadok) popisujúci, čo sa s každou adresou u
 </a>
 {% endfor %}
 
-{% else %}
+{% endif %}
+</div>
 
 {% set missing_osm = (minv_streets - osm_streets) | list | sort %}
 {% set missing_minv = (osm_streets - minv_streets) | list | sort %}
@@ -275,7 +275,6 @@ Overpass query - budovy a adresné body:<br/>
 </div>
 </div>
 
-{% endif %}
 </body>
 
 </html>
