@@ -4,7 +4,6 @@ charset-normalizer==2.0.12
 click==8.1.2
 click-plugins==1.1.1
 cligj==0.7.2
-conflate==0.5.2
 Fiona==1.8.21
 geojson==2.5.0
 geopandas==0.10.2
@@ -14,6 +13,7 @@ lxml==4.8.0
 MarkupSafe==2.1.1
 munch==2.5.0
 numpy==1.22.3
+osm-conflate==1.4.1
 overpass==0.7
 pandas==1.4.2
 pyproj==3.3.0
