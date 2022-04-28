@@ -64,10 +64,19 @@ import shlex
 import socket
 import subprocess
 import sys
+import yaml
 import zipfile
 
 # tolerancia s akou sa zjednodusia hranice obce
 tolerance = 0.001
+
+config_data = {}
+if os.path.isfile('config.yaml'):
+    with open('config.yaml') as f:
+        config_data = yaml.safe_load(f)
+
+webroot = config_data.get('webroot')
+url_template = config_data.get('url_template', '%s')
 
 logging.basicConfig(level=logging.INFO)
 env = Environment(loader=FileSystemLoader("templates"))
@@ -101,7 +110,7 @@ def get_minv_data():
         local_size = 0
     if size_on_server != local_size:
         info("Zistena potreba stahovania - ziskavam adresy.zip..")
-        r = requests.get("http://proxy.freemap.sk/minvskaddress/adresy.zip")
+        r = requests.get(minv_url)
         with open("adresy.zip", "wb") as f:
             f.write(r.content)
 
@@ -695,7 +704,7 @@ def check_josm():
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", type=str, dest='outdir', metavar='OUTDIR', help="cesta, kde bude vytvoreny adresar s nazvom obce, standardne: aktualny adresar", default=".")
+    parser.add_argument("-d", type=str, dest='outdir', metavar='OUTDIR', help="cesta, kde bude vytvoreny adresar s nazvom obce, standardne: ak nie je definovany v config.yaml pouzije sa aktualny adresar (ak nie je definovany)", default=".")
     parser.add_argument("city", help="mesto/obec, ktore/a sa ma spracovat")
     args = parser.parse_args()
     return args
@@ -708,6 +717,11 @@ if __name__ == "__main__":
     if outdir != '.':
         print(f'Presuvam sa do adresara {outdir}')
         os.chdir(outdir)
+    else:
+        if webroot:
+            outdir = webroot
+            print(f'Presuvam sa do adresara {outdir}')
+            os.chdir(outdir)
 
     buildings_json = f"{city}/buildings_{city}.geojson"
     addrnodes_json = f"{city}/addrnodes_{city}.geojson"

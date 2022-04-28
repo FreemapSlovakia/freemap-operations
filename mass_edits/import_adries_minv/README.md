@@ -12,6 +12,8 @@ source import_adries/bin/activate
 git clone https://github.com/FreemapSlovakia/freemap-operations.git
 cd freemap-operations/mass_edits/import_adries_minv
 pip install -r requirements.txt
+mv config.yaml.example config.yaml
+# edit config.yaml
 ```
 
 ## Spustenie a syntax

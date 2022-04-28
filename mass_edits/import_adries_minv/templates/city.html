@@ -1,280 +1,281 @@
 {%- set buff = 0.001 -%}
-{%- set webroot = "https://proxy.freemap.sk/jose1711/%s" | format(city) -%}
+{%- set webroot = url_template | format(city) -%}
 <html>
-<title>{{ city }}</title>
-<link rel="stylesheet" type="text/css" href="../main.css">
-<meta charset="UTF-8">
-<body>
-<div class="blended_grid">
-<div class="leftColumn">
-<h3>Vstupy</h3>
-<p>
-<a href="source_{{ city }}.osm">OSM: {{ osm_addr_count }}</a>
- <a href="http://localhost:8111/import?url={{ webroot }}/source_{{ city }}.osm">(JOSM)</a>
- <br>
-{{ date_generated }}</p>
-<p>
-<a href="source_{{ city }}.geojson">MINV: {{ z2 | length }}</a>
- <a href="http://localhost:8111/import?url={{ webroot }}/source_{{ city }}.geojson">(JOSM)</a>
-<br>
-{{ date_minv }}</p>
-<h3>Výstupy</h3>
-<p>
-<a href="result_{{ city }}.osm">OSM so zlúčenými adresami</a>
- <a href="http://localhost:8111/import?url={{ webroot }}/result_{{ city }}.osm">(JOSM)</a>
-</p>
-<p id="comment">
-Otvárajte až po kontrole vstupných dát (vpravo).
-</p>
+	<title>{{ city }}</title>
+	<link rel="stylesheet" type="text/css" href="../main.css">
+	<meta charset="UTF-8">
+	<body>
+		<div class="container">
+			<aside class="container__sidebar">
+				<!-- Sidebar -->
+				<h3>Vstupy</h3>
+				<p>
+				<a href="source_{{ city }}.osm">OSM: {{ osm_addr_count }}</a>
+				<a href="http://localhost:8111/import?url={{ webroot }}/source_{{ city }}.osm">(JOSM)</a>
+				<br>
+				{{ date_generated }}</p>
+				<p>
+				<a href="source_{{ city }}.geojson">MINV: {{ z2 | length }}</a>
+				<a href="http://localhost:8111/import?url={{ webroot }}/source_{{ city }}.geojson">(JOSM)</a>
+				<br>
+				{{ date_minv }}</p>
+				<h3>Výstupy</h3>
+				<p>
+				<a href="result_{{ city }}.osm">OSM so zlúčenými adresami</a>
+				<a href="http://localhost:8111/import?url={{ webroot }}/result_{{ city }}.osm">(JOSM)</a>
+				</p>
+				<p id="comment">
+				Otvárajte až po kontrole vstupných dát (vpravo).
+				</p>
 
-<p>
-<a href="{{ webroot }}/{{ city }}/{{ city }}_list.txt">Zoznam so zmenami</a>
-</p>
-<p id="comment">
-Zoznam adries (jedna položka na riadok) popisujúci, čo sa s každou adresou udialo (modify=úprava existujúceho elementu, create=nová adresa).
-</p>
+				<p>
+				<a href="{{ webroot }}/{{ city }}/{{ city }}_list.txt">Zoznam so zmenami</a>
+				</p>
+				<p id="comment">
+				Zoznam adries (jedna položka na riadok) popisujúci, čo sa s každou adresou udialo (modify=úprava existujúceho elementu, create=nová adresa).
+				</p>
 
-</div>
-<div class="topBanner">
-<h1>{{ city }}</h1> <small>{{ county }}/{{ district }}</small><br>
+			</aside>
+			<main class="container__main">
+				<h1>{{ city }}</h1> <small>{{ county }}/{{ district }}</small><br>
 
-{% if bbox | length %}
-<iframe src="https://www.freemap.sk/?map=13/{{ (bbox[1] + bbox[3]) / 2 }}/{{ (bbox[0] + bbox[2]) / 2 }}&layers=Xe&embed=noMapSwitch,noLocateMe" style="width: 100%; height: 300px; border: 0"></iframe>
-{% endif %}
+				{% if bbox | length %}
+				<iframe src="https://www.freemap.sk/?map=13/{{ (bbox[1] + bbox[3]) / 2 }}/{{ (bbox[0] + bbox[2]) / 2 }}&layers=Xe&embed=noMapSwitch,noLocateMe" style="width: 100%; height: 300px; border: 0"></iframe>
+				{% endif %}
 
-{% if duplicates | length %}
-<h2>Prekrývajúce sa budovy</h2>
-{% for (_, latlon) in duplicates.iterrows() %}
-{% set lat, lon = latlon %}
-<a href="http://localhost:8111/load_and_zoom?left={{ lon-buff }}&right={{ lon+buff }}&top={{ lat+buff }}&bottom={{ lat-buff }}">
-{{ loop.index }}
-</a>
+		</div>
+
+				{% if duplicates | length %}
+				<h2>Prekrývajúce sa budovy</h2>
+				{% for (_, latlon) in duplicates.iterrows() %}
+				{% set lat, lon = latlon %}
+				<a href="http://localhost:8111/load_and_zoom?left={{ lon-buff }}&right={{ lon+buff }}&top={{ lat+buff }}&bottom={{ lat-buff }}">
+					{{ loop.index }}
+				</a>
+				{% endfor %}
+
+				{% endif %}
+
+		{% set missing_osm = (minv_streets - osm_streets) | list | sort %}
+		{% set missing_minv = (osm_streets - minv_streets) | list | sort -%}
+
+		<div class="container">
+			<div class="container__half">
+
+				<h2>Údaje MINV</h2>
+
+				{% if dropped_points | length %}
+				<p id="comment">
+				Potenciálne problémy v dátach z MINV. Jednotlivé "prehrešky" treba posúdiť individuálne a v prípade, že sa potvrdia, je vhodné kontaktovať príslušný mestský/obecný úrad so žiadosťou o nápravu.
+				</p>
+				<h3>Adresné body mimo hraníc obce ({{ dropped_points | length }})</h3>
+				<p id="comment">
+				Adresné body mimo hraníc obce (podľa databázy ZSJ). Ak sú tieto body veľmi vzdialené od týchto hraníc, kontaktujte MsÚ/OcÚ, príp. aj s informáciou, kde sa má daná adresa nachádzať.
+				</p>
+				{% for key, value in dropped_points.sort_values('nstreet').drop_duplicates().iterrows() %}
+				{{ value['nstreet'] }} {{ value['addr:conscriptionnumber'] }}/{{ value['addr:streetnumber'] }} {{ '%.3f' | format(value['lat']) | float }} {{ '%.3f' | format(value['lon']) | float }}
+				<a target=_blank href="http://localhost:8111/add_node?lon={{ value['lon'] }}&lat={{ value['lat'] }}&addtags=addr:streetnumber={{ value['addr:streetnumber'] }}%7Caddr:street={{ value['nstreet'] }}%7Caddr:conscriptionnumber={{ value['addr:conscriptionnumber'] }}"> JOSM</a><br/>
+				{% endfor %}
+				{% endif %}
+
+				{% if duplicate_locations | length %}
+				<h3>Adresné body s duplicitnou lokáciou ({{ duplicate_locations | length }})</h3>
+				<textarea rows="5" style="width: 100%" readonly="true">
+					{%- for _, line in duplicate_locations.iterrows() %}
+					{% set street, conscriptionnumber, streetnumber, lat, lon = line -%}
+					{{ street }} {{ conscriptionnumber }}/{{ streetnumber }}: {{ lat }}, {{ lon }}
+					{%- endfor -%}
+				</textarea>
+				{% endif %}
+
+				{% if bad_addresses_minv['no_location_address'].to_records() | length %}
+				<h3>Adresné body bez súradníc ({{ bad_addresses_minv['no_location_address'].to_records() | length }})</h3>
+				<textarea rows="{{ [10, (bad_addresses_minv['no_location_address'].to_records() | length)] | min}}" style="width: 50%" readonly="true">
+{% for line in bad_addresses_minv['no_location_address'].to_records() %}
+{{- line[0] }} {{ line[2] }} {{ line[3] }}/{{ line[4] }}
 {% endfor %}
+				</textarea>
+				{%- endif %}
 
-{% endif %}
-</div>
+				{%- set element_map = {'n': 'node', 'w': 'way', 'r': 'relation'} -%}
+				{%- set incomplete_addresses = bad_addresses_osm['incomplete_addresses'] -%}
+				{%- set mismatching_addresses = bad_addresses_osm['mismatching_addresses'] -%}
 
-{% set missing_osm = (minv_streets - osm_streets) | list | sort %}
-{% set missing_minv = (osm_streets - minv_streets) | list | sort %}
+				{% if suspicious_distances | length %}
 
-<div class="leftContent">
-<h2>Údaje MINV</h2>
+				<h3>Ulice s podozrivými bodmi</h3>
+				<p id="comment">
+				Zoznam 10 ulíc s najväčšími rozdielmi medzi najväčšou a priemernou vzdialenosťou k najbližšiemu ďalšiemu adresnému bodu. Môže poslúžiť na odhalenie "ustrelenej" adresy. Takisto však môže obsahovať - predovšetkým pri uliciach s malým počtom adries - neužitočnú informáciu (falošný poplach).
+				<p>
 
-{% if dropped_points | length %}
-<p id="comment">
-Potenciálne problémy v dátach z MINV. Jednotlivé "prehrešky" treba posúdiť individuálne a v prípade, že sa potvrdia, je vhodné kontaktovať príslušný mestský/obecný úrad so žiadosťou o nápravu.
-</p>
-<h3>Adresné body mimo hraníc obce ({{ dropped_points | length }})</h3>
-<p id="comment">
-Adresné body mimo hraníc obce (podľa databázy ZSJ). Ak sú tieto body veľmi vzdialené od týchto hraníc, kontaktujte MsÚ/OcÚ, príp. aj s informáciou, kde sa má daná adresa nachádzať.
-</p>
-{% for key, value in dropped_points.sort_values('nstreet').drop_duplicates().iterrows() %}
-{{ value['nstreet'] }} {{ value['addr:conscriptionnumber'] }}/{{ value['addr:streetnumber'] }} {{ '%.3f' | format(value['lat']) | float }} {{ '%.3f' | format(value['lon']) | float }}
-<a target=_blank href="http://localhost:8111/add_node?lon={{ value['lon'] }}&lat={{ value['lat'] }}&addtags=addr:streetnumber={{ value['addr:streetnumber'] }}%7Caddr:street={{ value['nstreet'] }}%7Caddr:conscriptionnumber={{ value['addr:conscriptionnumber'] }}"> JOSM</a><br/>
-{% endfor %}
-{% endif %}
+				{%- for (_, line) in suspicious_distances.head(10).iterrows() %}
+				{%- set name, ratio = line %}
+				{{ name }} ({{ "%.2f" | format(ratio) }})<br>
+				{%- endfor -%}
 
-{% if duplicate_locations | length %}
-<h3>Adresné body s duplicitnou lokáciou ({{ duplicate_locations | length }})</h3>
-<textarea rows="5" style="width: 100%" readonly="true">
-{%- for _, line in duplicate_locations.iterrows() %}
-{% set street, conscriptionnumber, streetnumber, lat, lon = line -%}
-{{ street }} {{ conscriptionnumber }}/{{ streetnumber }}: {{ lat }}, {{ lon }}
-{%- endfor -%}
-</textarea>
-{% endif %}
+				{% endif %}
 
-{% if bad_addresses_minv['no_location_address'].to_records() | length %}
-<h3>Adresné body bez súradníc ({{ bad_addresses_minv['no_location_address'].to_records() | length }})</h3>
-<textarea rows="{{ [10, (bad_addresses_minv['no_location_address'].to_records() | length)] | min}}" style="width: 100%" readonly="true">
-{% for line in bad_addresses_minv['no_location_address'].to_records() -%}
-{{ line[0] }} {{ line[2] }} {{ line[3] }}/{{ line[4] }}
-{% endfor %}
-</textarea>
-{% endif %}
+				{% if renamed_streets | length %}
 
-{%- set element_map = {'n': 'node', 'w': 'way', 'r': 'relation'} -%}
-{%- set incomplete_addresses = bad_addresses_osm['incomplete_addresses'] -%}
-{%- set mismatching_addresses = bad_addresses_osm['mismatching_addresses'] -%}
+				<h3>Zoznam premenovaných ulíc</h3>
+				<p id="comment">
+				Zoznam premenovaných ulíc, ktoré filter názvov ulíc zmenil (vychádzajúc pritom zo základných typografických pravidiel a gramatiky slovenského jazyka). Tieto úpravy nemusia byť definitívne, v prípade pochybnosti o danom filtri o tom napíšte na fórum OSM_SK). Vľavo: pôvodný názov v registri RA, vpravo: nový názov po zmene.
+				</p>
+				{%- for (_, line) in renamed_streets.iterrows() %}
+				{%- set old, new = line %}
+				{{ old }} =&gt; {{ new }}<br/>
+				{% endfor %}
+				{% endif %}
 
-{% if suspicious_distances | length %}
+			</div>
 
-<h3>Ulice s podozrivými bodmi</h3>
-<p id="comment">
-Zoznam 10 ulíc s najväčšími rozdielmi medzi najväčšou a priemernou vzdialenosťou k najbližšiemu ďalšiemu adresnému bodu. Môže poslúžiť na odhalenie "ustrelenej" adresy. Takisto však môže obsahovať - predovšetkým pri uliciach s malým počtom adries - neužitočnú informáciu (falošný poplach).
-<p>
+			<div class="container__half">
+				<h2>Údaje OSM</h2>
+				<p id="comment">
+				Možné chyby v databáze OpenStreetMap, často chýbajúce adresné tagy, ktoré sú podstatné pre proces zlúčenia dát.
+				</p>
 
-{%- for (_, line) in suspicious_distances.head(10).iterrows() %}
-{%- set name, ratio = line %}
-{{ name }} ({{ "%.2f" | format(ratio) }})<br>
-{%- endfor -%}
+				{% if incomplete_addresses.to_records() | length %}
+				<h3>Neúplné adresy</h3>
+				{% set incomplete_addresses_all = [] %}
+				<p id="comment">
+				Zoznam adries v OSM s vyplneným tagom <span class="mono">addr:housenumber</span>, no chýbajúcimi pridruženými tagmi <span class="mono">addr:streetnumber</span>/<span class="mono">addr:conscriptionnumber</span>. Chýbajúce tagy je potrebné doplniť. Tiež sem spadajú prípady, kedy si tagy odporujú.
+				</p>
 
-{% endif %}
+				{%- for _, incomplete_address in incomplete_addresses.iterrows() -%}
+				{% set element_type = element_map[incomplete_address['object_id'][0]] -%}
 
-{% if renamed_streets | length %}
-
-<h3>Zoznam premenovaných ulíc</h3>
-<p id="comment">
-Zoznam premenovaných ulíc, ktoré filter názvov ulíc zmenil (vychádzajúc pritom zo základných typografických pravidiel a gramatiky slovenského jazyka). Tieto úpravy nemusia byť definitívne, v prípade pochybnosti o danom filtri o tom napíšte na fórum OSM_SK). Vľavo: pôvodný názov v registri RA, vpravo: nový názov po zmene.
-</p>
-{%- for (_, line) in renamed_streets.iterrows() %}
-{%- set old, new = line %}
-{{ old }} =&gt; {{ new }}<br/>
-{% endfor %}
-{% endif %}
-
-</div>
-
-<div class="rightContent">
+				<a href="https://www.openstreetmap.org/{{ element_type }}/{{ incomplete_address['object_id'][1:] }}">{{ incomplete_address['object_id'] }}</a>
+				{{ incomplete_addresses_all.append(incomplete_address['object_id']) | default("", True) }}
+				{%- endfor -%}
+				<a href="http://localhost:8111/load_object?new_layer=true&objects={{ incomplete_addresses_all | join(',') }}">Otvoriť všetko v JOSM</a>
+				{%- endif -%}
 
 
-<h2>Údaje OSM</h2>
-<p id="comment">
-Možné chyby v databáze OpenStreetMap, často chýbajúce adresné tagy, ktoré sú podstatné pre proces zlúčenia dát.
-</p>
+				{% if mismatching_addresses | length %}
+				<h3>Nesúlad medzi addr:housenumber a addr:streetnumber/addr:conscriptionnumber</h3>
+				<p id="comment">
+				Zoznam adries v OSM s vyplneným tagom <span class="mono">addr:housenumber</span> vo formáte SÚPISNÉ/ORIENTAČNÉ číslo, no tomu nezodpovedajúcim hodnotám v tagoch <span class="mono">addr:conscriptionnumber</span> a <span class="mono">addr:streetnumber</span>. Tieto nezrovnalosti je potrebné opraviť.
+				</p>
 
-{% if incomplete_addresses.to_records() | length %}
-<h3>Neúplné adresy</h3>
-{% set incomplete_addresses_all = [] %}
-<p id="comment">
-Zoznam adries v OSM s vyplneným tagom <span class="mono">addr:housenumber</span>, no chýbajúcimi pridruženými tagmi <span class="mono">addr:streetnumber</span>/<span class="mono">addr:conscriptionnumber</span>. Chýbajúce tagy je potrebné doplniť. Tiež sem spadajú prípady, kedy si tagy odporujú.
-</p>
+				{% set mismatching_addresses_all = [] %}
+				{% for _, mismatching_address in mismatching_addresses.iterrows() %}
 
-{% for _, incomplete_address in incomplete_addresses.iterrows() %}
-{% set element_type = element_map[incomplete_address['object_id'][0]] %}
+				{% set element_type = element_map[mismatching_address['object_id'][0]] %}
+				<a href="https://www.openstreetmap.org/{{ element_type }}/{{ mismatching_address['object_id'][1:] }}">{{ mismatching_address['object_id'] }}</a>
+				{{ mismatching_addresses_all.append(mismatching_address['object_id']) | default("", True) }}
 
-<a href="https://www.openstreetmap.org/{{ element_type }}/{{ incomplete_address['object_id'][1:] }}">{{ incomplete_address['object_id'] }}</a>
-{{ incomplete_addresses_all.append(incomplete_address['object_id']) | default("", True) }}
-{% endfor %}
+				{% endfor %}
+				<a href="http://localhost:8111/load_object?new_layer=true&objects={{ mismatching_addresses_all | join(',') }}">Otvoriť všetko v JOSM</a>
+				{% endif %}
 
- <a href="http://localhost:8111/load_object?new_layer=true&objects={{ incomplete_addresses_all | join(',') }}">Otvoriť všetko v JOSM</a>
+				<h3>Adresy mimo budov</h3>
+				<p>
+				<a href="outside_buildings_{{ city }}.geojson">Adresné body mimo budov</a>
+				<a href="http://localhost:8111/import?url={{ webroot }}/outside_buildings_{{ city }}.geojson">(JOSM)</a>
+				</p>
+				<p id="comment">
+				Adresné body v datasete MINV, ktoré nepretínajú ani nie sú v blízkosti budovy v OSM. Pomocou vrstvy Ortofotomozaika SR/Katasterportal je potrebné preveriť, či do OSM netreba zakresliť novú/chýbajúcu budovu. Príležitostne môžete naraziť aj na budovu tagovanú ako reláciu, v takých prípadoch môžte adresný bod v súbore ignorovať.
+				</p>
 
-{% endif %}
+			</div>
+			</div>
+			<div class="bottomBanner">
 
+				<div class="row">
+					<div class="column">
 
-{% if mismatching_addresses | length %}
-<h3>Nesúlad medzi addr:housenumber a addr:streetnumber/addr:conscriptionnumber</h3>
-<p id="comment">
-Zoznam adries v OSM s vyplneným tagom <span class="mono">addr:housenumber</span> vo formáte SÚPISNÉ/ORIENTAČNÉ číslo, no tomu nezodpovedajúcim hodnotám v tagoch <span class="mono">addr:conscriptionnumber</span> a <span class="mono">addr:streetnumber</span>. Tieto nezrovnalosti je potrebné opraviť.
-</p>
+						{% if missing_osm %}
+						<h3>Ulice chýbajúce v OSM</h3>
+						<p id="comment">
+						Ulice, ktoré sa nachádzajú v datasete MINV, no neboli nájdené v dátach OSM. Môže to tiež znamenať, že v údajoch MINV je táto ulica s mierne odlišným názvom, napr. J. Kráľa miesto Janka Kráľa. V tomto konkrétnom prípade je potrebné presunúť dlhý názov ulice do <span class="mono">alt_name</span> a do tagu <span class="mono">name</span> umiestniť názov zhodný s názvom v MINV.
+						</p>
 
-{% set mismatching_addresses_all = [] %}
-{% for _, mismatching_address in mismatching_addresses.iterrows() %}
+						{% for ulica in missing_osm %}
+						{{ ulica }}<br/>
+						{% endfor %}
+						{% endif %}
 
-{% set element_type = element_map[mismatching_address['object_id'][0]] %}
-<a href="https://www.openstreetmap.org/{{ element_type }}/{{ mismatching_address['object_id'][1:] }}">{{ mismatching_address['object_id'] }}</a>
-{{ mismatching_addresses_all.append(mismatching_address['object_id']) | default("", True) }}
+					</div>
 
-{% endfor %}
- <a href="http://localhost:8111/load_object?new_layer=true&objects={{ mismatching_addresses_all | join(',') }}">Otvoriť všetko v JOSM</a>
-{% endif %}
+					<div class="column">
 
-<h3>Adresy mimo budov</h3>
-<p>
-<a href="outside_buildings_{{ city }}.geojson">Adresné body mimo budov</a>
- <a href="http://localhost:8111/import?url={{ webroot }}/outside_buildings_{{ city }}.geojson">(JOSM)</a>
-</p>
-<p id="comment">
-Adresné body v datasete MINV, ktoré nepretínajú ani nie sú v blízkosti budovy v OSM. Pomocou vrstvy Ortofotomozaika SR/Katasterportal je potrebné preveriť, či do OSM netreba zakresliť novú/chýbajúcu budovu. Príležitostne môžete naraziť aj na budovu tagovanú ako reláciu, v takých prípadoch môžte adresný bod v súbore ignorovať.
-</p>
+						{% if missing_minv %}
+						<h3>Ulice nenájdené v datasete MINV</h3>
+						<p id="comment">
+						Ulice, ktoré sa nachádzajú v údajoch OSM, no neboli nájdené v datasete MINV. Môže to tiež znamenať, že v údajoch MINV je táto ulica s mierne odlišným názvom, napr. J. Kráľa miesto Janka Kráľa. V tomto konkrétnom prípade je potrebné presunúť dlhý názov ulice do <span class="mono">alt_name</span> a do tagu <span class="mono">name</span> umiestniť názov zhodný s názvom v MINV.
+						</p>
+						{% for ulica in missing_minv %}
+						{{ ulica }}<br/>
+						{% endfor %}
 
-</div>
-<div class="bottomBanner">
+						{% endif %}
 
-<div class="row">
-<div class="column">
+					</div>
 
-{% if missing_osm %}
-<h3>Ulice chýbajúce v OSM</h3>
-<p id="comment">
-Ulice, ktoré sa nachádzajú v datasete MINV, no neboli nájdené v dátach OSM. Môže to tiež znamenať, že v údajoch MINV je táto ulica s mierne odlišným názvom, napr. J. Kráľa miesto Janka Kráľa. V tomto konkrétnom prípade je potrebné presunúť dlhý názov ulice do <span class="mono">alt_name</span> a do tagu <span class="mono">name</span> umiestniť názov zhodný s názvom v MINV.
-</p>
+					{% if bad_addresses_crosschecked['bad_street'].to_records() | length %}
 
-{% for ulica in missing_osm %}
-  {{ ulica }}<br/>
-{% endfor %}
-{% endif %}
+					<h3>Nesúlad v názve ulice</h3>
+					<p id="comment">
+					Adresy, ktoré majú rovnaké súpisné a orientačné číslo v oboch datasetoch, ale obsahujú iný názov ulice.
+					</p>
 
-</div>
+					{% for line in bad_addresses_crosschecked['bad_street'].sort_values('addr:street_y').iterrows() %}
+					{% set object_id = line[1]['object_id'] %}
+					{% set osm_street = line[1]['addr:street_y'] %}
+					{% set minv_street = line[1]['nstreet'] %}
 
-<div class="column">
+					{% set element_type = element_map[object_id[0][0]] %}
 
-{% if missing_minv %}
-<h3>Ulice nenájdené v datasete MINV</h3>
-<p id="comment">
-Ulice, ktoré sa nachádzajú v údajoch OSM, no neboli nájdené v datasete MINV. Môže to tiež znamenať, že v údajoch MINV je táto ulica s mierne odlišným názvom, napr. J. Kráľa miesto Janka Kráľa. V tomto konkrétnom prípade je potrebné presunúť dlhý názov ulice do <span class="mono">alt_name</span> a do tagu <span class="mono">name</span> umiestniť názov zhodný s názvom v MINV.
-</p>
-{% for ulica in missing_minv %}
-  {{ ulica }}<br/>
-{% endfor %}
+					{{ osm_street }} (osm), {{ minv_street }} (minv)
 
-{% endif %}
+					<a href="https://www.openstreetmap.org/{{ element_type }}/{{ object_id[1:] }}">{{ object_id }}</a>
+					<br/>
 
-</div>
+					{% endfor %}
 
-{% if bad_addresses_crosschecked['bad_street'].to_records() | length %}
-
-<h3>Nesúlad v názve ulice</h3>
-<p id="comment">
-Adresy, ktoré majú rovnaké súpisné a orientačné číslo v oboch datasetoch, ale obsahujú iný názov ulice.
-</p>
-
-{% for line in bad_addresses_crosschecked['bad_street'].sort_values('addr:street_y').iterrows() %}
-{% set object_id = line[1]['object_id'] %}
-{% set osm_street = line[1]['addr:street_y'] %}
-{% set minv_street = line[1]['nstreet'] %}
-
-{% set element_type = element_map[object_id[0][0]] %}
-
-{{ osm_street }} (osm), {{ minv_street }} (minv)
-
-<a href="https://www.openstreetmap.org/{{ element_type }}/{{ object_id[1:] }}">{{ object_id }}</a>
-<br/>
-
-{% endfor %}
-
-{% endif %}
+					{% endif %}
 
 
-</div>
+				</div>
 
-<h2>Ladiace informácie</h2>
+				<h2>Ladiace informácie</h2>
 
-<h3>Pomocné údaje</h3>
-<p>
-<a href="{{ city }}_original_boundary.geojson">Pôvodné hranice obce</a>
- <a href="http://localhost:8111/import?url={{ webroot }}/{{ city }}_original_boundary.geojson">(JOSM)</a>
-</p>
+				<h3>Pomocné údaje</h3>
+				<p>
+				<a href="{{ city }}_original_boundary.geojson">Pôvodné hranice obce</a>
+				<a href="http://localhost:8111/import?url={{ webroot }}/{{ city }}_original_boundary.geojson">(JOSM)</a>
+				</p>
 
-<p>
-<a href="{{ city }}_simplified_boundary.geojson">Zjednodušené hranice obce</a>
- <a href="http://localhost:8111/import?url={{ webroot }}/{{ city }}_simplified_boundary.geojson">(JOSM)</a>
-</p>
+				<p>
+				<a href="{{ city }}_simplified_boundary.geojson">Zjednodušené hranice obce</a>
+				<a href="http://localhost:8111/import?url={{ webroot }}/{{ city }}_simplified_boundary.geojson">(JOSM)</a>
+				</p>
 
-<p>
-<a href="buildings_{{ city }}.geojson">Budovy v OSM (pomocný súbor)</a>
- <a href="http://localhost:8111/import?url={{ webroot }}/buildings_{{ city }}.geojson">(JOSM)</a>
-</p>
+				<p>
+				<a href="buildings_{{ city }}.geojson">Budovy v OSM (pomocný súbor)</a>
+				<a href="http://localhost:8111/import?url={{ webroot }}/buildings_{{ city }}.geojson">(JOSM)</a>
+				</p>
 
-Overpass query - budovy a adresné body:<br/>
-<textarea rows="10" style="width: 100%" cols="100" readonly="true">
-{{ overpass_query }}; out body;
-</textarea>
+				Overpass query - budovy a adresné body:<br/>
+				<textarea rows="10" style="width: 100%" cols="100" readonly="true">
+					{{ overpass_query }}; out body;
+				</textarea>
 
-{% if conflate_stderr %}
-<h3>Výstup Conflatora<h3>
-<textarea readonly="true" style="width: 100%" rows="10" cols="100">
-{% for line in conflate_stderr.decode("utf-8").split("\n") -%}
-{%- if not line.endswith('does not have a center') -%}
-{{ line }}
-{% endif %}
-{%- endfor %}
-</textarea>
-{% endif %}
+				{% if conflate_stderr %}
+				<h3>Výstup Conflatora<h3>
+						<textarea readonly="true" style="width: 100%" rows="10" cols="100">
+							{% for line in conflate_stderr.decode("utf-8").split("\n") -%}
+							{%- if not line.endswith('does not have a center') -%}
+							{{ line }}
+							{% endif %}
+							{%- endfor %}
+						</textarea>
+						{% endif %}
 
-</div>
-</div>
+			</main>
+			</div>
 
-</body>
+	</body>
 
 </html>

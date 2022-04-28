@@ -1,0 +1,88 @@
+<html>
+	<link href="https://www.tabulator.info/css/tabulator/5.2/tabulator.css" rel="stylesheet">
+	<link href="dist/css/tabulator.min.css" rel="stylesheet">
+	<title>MINV adresy vs OSM</title>
+			<script type="text/javascript" src="dist/js/tabulator.min.js"></script>
+			<style>
+#title {
+  height: fit-content;
+  padding: 0;
+}
+ #main-table {
+   height: 80%;
+ }
+			</style>
+			<head>
+			</head>
+			<body>
+				<div id="title">
+					<h2>MINV dáta (adresy) vs OSM</h2>
+					<p>Kliknutím na názov obce sa otvorí okno s výsledkom spracovania. Po kliknutí na posledný stĺpec sa výsledný súbor otvorí v JOSM (je nutné povoliť Remote control v nastaveniach JOSM).</p>
+					<p>Táto tabuľka bola vygenerovaná dňa {{ today }}. Spracovanie všetkých obcí spravidla beží v týždennom intervale a trvá približne 15 hodín.</p>
+				</div>
+				<div id="main-table">
+				Táto stránka vyžaduje zapnutý Javascript. Ako alternatívu môžete použiť <a href="index2.html">tento zoznam</a> odkazov na jednotlivé obce/mestá.
+				</div>
+				<script>
+					var table = new Tabulator("#main-table", {
+											ajaxURL: window.location + "obce.json",
+											layout: "fitData",
+											responsiveLayout: "hide",
+											tooltips: true,
+											addRowPos: "top",
+											pagination: "local",
+											langs: {
+																	"sk-sk": {
+																							"pagination": {
+																													"first": "Prvá",
+																													"first_title": "Prvá strana",
+																													"last": "Posledná",
+																													"last_title": "Posledná strana",
+																													"prev": "Predchádzajúca",
+																													"prev_title": "Predch strana",
+																													"next": "Ďalšia",
+																													"next_title": "Ďalšia strana",
+																													"all": "Všetky",
+																													"page_title": "Zobraziť stranu",
+																													"counter": {
+																																			"showing": "Zobrazuje sa",
+																																			"of": "z",
+																																			"rows": "riadkov",
+																																			"pages": "strán",
+																																		}
+																												},
+																						}
+																},
+											paginationCounter:"rows",
+											columns: [
+																	{title: "Obec/Mesto", field: "Obec", headerFilter: "input"},
+																	{title: "Okres", field: "Okres", headerFilter: "input"},
+																	{title: "Kraj", field: "Kraj", headerFilter: "input"},
+																	{title: "Generované", field: "Generované"},
+																	{title: "Prekrývajúce sa<br/>budovy", field: "Budovy", formatter: "color"},
+																	{title: "Výsledok", field: "Výsledok"},
+																],
+											initialSort:[
+																	{column:"Obec", dir:"asc"},
+																],
+										});
+					table.on("cellClick", function(e, cell){
+											clicked_text = cell._cell.value;
+											city = cell._cell.element.parentElement.firstElementChild.textContent.split(" (")[0];
+											console.log(clicked_text);
+											if ( clicked_text != "JOSM" )
+											{
+																	window.open(city);
+																}
+											else {
+																	window.open('http://localhost:8111/import?url=' + window.location + city + '/result_' + city + '.osm',
+																							'_blank');
+																	window.open().close();
+																};
+										});
+					table.on("tableBuilt", function() {
+											table.setLocale("sk-sk");
+										});
+				</script>
+			</body>
+</html>

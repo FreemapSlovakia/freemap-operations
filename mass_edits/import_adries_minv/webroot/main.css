@@ -1,0 +1,27 @@
+.container {
+	display: flex;
+}
+
+.container__sidebar {
+	width: 20%;
+}
+
+.container__main {
+	flex: 1;
+	overflow: auto;
+}
+
+.container__half {
+	flex: 1;
+	padding-left: 1%;
+}
+
+#comment {
+	font-size: xx-small;
+	background-color: yellow;
+	margin-top: 10pt;
+	padding-left: 10pt;
+	padding-right: 10pt;
+	margin-left: 5pt;
+	margin-right: 5pt;
+}
