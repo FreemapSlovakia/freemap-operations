@@ -738,6 +738,8 @@ if __name__ == "__main__":
     outside_buildings_json = f"{city}/outside_buildings_{city}.geojson"
     list_file = f"{city}/{city}_list.txt"
 
+    outside_boundaries_json = f"{city}/{city}_outside_boundaries.geojson"
+
     original_city_boundary = f"{city}/{city}_original_boundary.geojson"
     simplified_city_boundary = f"{city}/{city}_simplified_boundary.geojson"
 
@@ -889,6 +891,9 @@ if __name__ == "__main__":
     city_gdf = cut(city_gdf, city)
 
     info(f"Orezanych {len(dropped_points)} adresnych bodov")
+    if not dropped_points.empty:
+        with open(outside_boundaries_json, 'w') as f:
+            f.write(dropped_points.to_json())
 
     city_gdf = city_gdf.assign(
         dont_tag_buildings=city_gdf.groupby("addr:conscriptionnumber")
