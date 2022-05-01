@@ -1,0 +1,2 @@
+webroot: /some/path/to/webroot
+url_template: "https://some/website/%s"

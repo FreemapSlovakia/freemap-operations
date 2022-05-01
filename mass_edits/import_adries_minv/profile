@@ -1,0 +1,50 @@
+#!/usr/bin/env python
+# TODO: maxdistance 100 m mozno bude prilis velky
+# otags = osm tagy
+# dtags = data tagy (minv)
+source = "survey"
+dataset_id = "minvskaddress"
+max_distance = 100
+
+# delete_unmatched = True
+auxiliary_tags = ('dont_tag_buildings', 'dont_tag_buildings2')
+
+# potrebujeme zoznam vsetkych OSM objektov, ktore budeme pripadne aktualizovat
+query =  [[('addr:housenumber',)], [('building',)], [('addr:conscriptionnumber',)]]
+
+# ktore elementy maju byt pripadne aktualizovane (sucastou importu)
+def matches(otags, dtags):
+    # uzol: pridanie supisneho cisla ku orientacnemu + ulici
+    if not otags.get('shop') and not otags.get('amenity') and not otags.get('building') and otags.get('addr:streetnumber') and otags.get('addr:street') == dtags.get('addr:street') and otags.get('addr:streetnumber') == dtags.get('addr:streetnumber') and otags.get('addr:streetnumber'):
+        return True
+
+    # uzol: pridanie orientacneho cisla k supisnemu
+    if not otags.get('shop') and not otags.get('amenity') and not otags.get('building') and otags.get('addr:conscriptionnumber') and otags.get('addr:conscriptionnumber') == dtags.get('addr:conscriptionnumber'):
+        return True
+
+    # cesta: pridanie tagov na budovu
+    if otags.get('building') and dtags.get('addr:streetnumber') and dtags.get('addr:streetnumber') == otags.get('addr:streetnumber') and dtags.get('dont_tag_buildings2') == 'False':
+        return True
+
+    # cesta: pridanie tagov na budovu (ak existuju len supisne cisla)
+    if otags.get('building') and dtags.get('addr:conscriptionnumber') and dtags.get('dont_tag_buildings2') == 'False':
+        return True
+
+    return False
+
+def weight(obj):
+    # znevyhodnit pri aktualizacii budovy bez adries - najprv sa pokusit aktualizovat existujuce adresne body
+    if obj.osm_type == 'way' and not obj.tags.get('addr:streetnumber') and not obj.tags.get('addr:conscriptionnumber'):
+        return -50
+    else:
+        return 0
+
+# rozdelenie psc na XXX XX
+def split_psc(psc):
+    if not psc:
+        return None
+    return f'{psc[:3]} {psc[3:]}'
+
+transform = {
+  'addr:postcode': split_psc
+  }
