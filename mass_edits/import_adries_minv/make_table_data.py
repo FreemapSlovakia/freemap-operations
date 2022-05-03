@@ -2,6 +2,7 @@
 from datetime import datetime
 from glob import glob
 from jinja2 import Environment, FileSystemLoader
+from lxml import etree
 from os import chdir, path, stat
 import json
 import locale
@@ -34,14 +35,24 @@ today = re.sub('ec\s', 'ca ', today, re.U)
 
 data = list()
 obce = list()
+parser = etree.HTMLParser(encoding='utf8')
 
 chdir(inputdir)
-for obec in glob('*'):
+for kodobce in glob('*'):
+    if kodobce.startswith(('_', 'dist')):
+        continue
+    try:
+        root = etree.parse(path.join(kodobce, 'index.html'), parser=parser)
+    except:
+        continue
+    obec = root.xpath('/html/head/title')[0].text
     ascii_name = unicodedata.normalize('NFD', obec).encode('ascii', 'ignore').decode()
-    filtered_csv = glob(path.join(obec, '*_filtered.csv'))
+    filtered_csv = glob(path.join(kodobce, '*_filtered.csv'))
     if not filtered_csv: continue
     filtered_csv = filtered_csv[0]
-    if not filtered_csv: continue
+    if not filtered_csv:
+        print('skip')
+        continue
     with open(filtered_csv) as f:
         row = f.readline()
         row = f.readline()
@@ -49,11 +60,12 @@ for obec in glob('*'):
     generated = time.strftime("%Y-%m-%d", time.localtime(stat(filtered_csv).st_mtime))
     print(obec, generated)
 
-    index_html = glob(path.join(obec, 'index.html'))
+    index_html = glob(path.join(kodobce, 'index.html'))
     if not index_html: continue
     index_html = index_html[0]
-    if not index_html: continue
-    obce.append((obec, okres, kraj))
+    if not index_html:
+        continue
+    obce.append((kodobce, obec, okres, kraj))
     if 'Prekrývajúce' in open(index_html).read():
         color = '#FF0000'
     else:
@@ -62,16 +74,19 @@ for obec in glob('*'):
     if ascii_name != obec:
         obec = f'{obec} ({ascii_name})'
 
-    data.append({'Obec': obec,
-        'Okres': okres,
-        'Kraj': kraj,
-        'Generované': generated,
-        'Budovy': color,
-        'Výsledok': 'JOSM',
-        })
+    data.append(
+            {
+                'KodObce': kodobce,
+                'Obec': obec,
+                'Okres': okres,
+                'Kraj': kraj,
+                'Generované': generated,
+                'Budovy': color,
+                'Výsledok': 'JOSM',
+                })
 
 with open(htmlout, 'w') as f:
-    f.write('<br>'.join([f'<a href="{obec}">{obec} ({okres}, {kraj})</a>' for obec, okres, kraj in sorted(obce)]))
+    f.write('<br>'.join([f'<a href="{kodobce}">{obec} ({okres}, {kraj})</a>' for kodobce, obec, okres, kraj in sorted(obce)]))
 
 with open(outfile, 'w') as f:
     f.write(json.dumps(data))

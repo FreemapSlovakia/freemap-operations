@@ -1,5 +1,5 @@
 {%- set buff = 0.001 -%}
-{%- set webroot = url_template | format(city) -%}
+{%- set webroot = url_template | format(citycode) -%}
 <html>
 	<title>{{ city }}</title>
 	<link rel="stylesheet" type="text/css" href="../main.css">
@@ -10,26 +10,26 @@
 				<!-- Sidebar -->
 				<h3>Vstupy</h3>
 				<p>
-				<a href="source_{{ city }}.osm">OSM: {{ osm_addr_count }}</a>
-				<a href="http://localhost:8111/import?url={{ webroot }}/source_{{ city }}.osm">(JOSM)</a>
+				<a href="source_{{ citycode }}.osm">OSM: {{ osm_addr_count }}</a>
+				<a href="http://localhost:8111/import?url={{ webroot }}/source_{{ citycode }}.osm">(JOSM)</a>
 				<br>
 				{{ date_generated }}</p>
 				<p>
-				<a href="source_{{ city }}.geojson">MINV: {{ z2 | length }}</a>
-				<a href="http://localhost:8111/import?url={{ webroot }}/source_{{ city }}.geojson">(JOSM)</a>
+				<a href="source_{{ citycode }}.geojson">MINV: {{ z2 | length }}</a>
+				<a href="http://localhost:8111/import?url={{ webroot }}/source_{{ citycode }}.geojson">(JOSM)</a>
 				<br>
 				{{ date_minv }}</p>
 				<h3>Výstupy</h3>
 				<p>
-				<a href="result_{{ city }}.osm">OSM so zlúčenými adresami</a>
-				<a href="http://localhost:8111/import?url={{ webroot }}/result_{{ city }}.osm">(JOSM)</a>
+				<a href="result_{{ citycode }}.osm">OSM so zlúčenými adresami</a>
+				<a href="http://localhost:8111/import?url={{ webroot }}/result_{{ citycode }}.osm">(JOSM)</a>
 				</p>
 				<p id="comment">
 				Otvárajte až po kontrole vstupných dát (vpravo).
 				</p>
 
 				<p>
-				<a href="{{ webroot }}/{{ city }}_list.txt">Zoznam so zmenami</a>
+				<a href="{{ webroot }}/{{ citycode }}_list.txt">Zoznam so zmenami</a>
 				</p>
 				<p id="comment">
 				Zoznam adries (jedna položka na riadok) popisujúci, čo sa s každou adresou udialo (modify=úprava existujúceho elementu, create=nová adresa).
@@ -171,8 +171,8 @@
 
 				<h3>Adresy mimo budov</h3>
 				<p>
-				<a href="outside_buildings_{{ city }}.geojson">Adresné body mimo budov</a>
-				<a href="http://localhost:8111/import?url={{ webroot }}/outside_buildings_{{ city }}.geojson">(JOSM)</a>
+				<a href="outside_buildings_{{ citycode }}.geojson">Adresné body mimo budov</a>
+				<a href="http://localhost:8111/import?url={{ webroot }}/outside_buildings_{{ citycode }}.geojson">(JOSM)</a>
 				</p>
 				<p id="comment">
 				Adresné body v datasete MINV, ktoré nepretínajú ani nie sú v blízkosti budovy v OSM. Pomocou vrstvy Ortofotomozaika SR/Katasterportal je potrebné preveriť, či do OSM netreba zakresliť novú/chýbajúcu budovu. Príležitostne môžete naraziť aj na budovu tagovanú ako reláciu, v takých prípadoch môžte adresný bod v súbore ignorovať.
@@ -243,18 +243,18 @@
 
 				<h3>Pomocné údaje</h3>
 				<p>
-				<a href="{{ city }}_original_boundary.geojson">Pôvodné hranice obce</a>
-				<a href="http://localhost:8111/import?url={{ webroot }}/{{ city }}_original_boundary.geojson">(JOSM)</a>
+				<a href="{{ citycode }}_original_boundary.geojson">Pôvodné hranice obce</a>
+				<a href="http://localhost:8111/import?url={{ webroot }}/{{ citycode }}_original_boundary.geojson">(JOSM)</a>
 				</p>
 
 				<p>
-				<a href="{{ city }}_simplified_boundary.geojson">Zjednodušené hranice obce</a>
-				<a href="http://localhost:8111/import?url={{ webroot }}/{{ city }}_simplified_boundary.geojson">(JOSM)</a>
+				<a href="{{ citycode }}_simplified_boundary.geojson">Zjednodušené hranice obce</a>
+				<a href="http://localhost:8111/import?url={{ webroot }}/{{ citycode }}_simplified_boundary.geojson">(JOSM)</a>
 				</p>
 
 				<p>
-				<a href="buildings_{{ city }}.geojson">Budovy v OSM (pomocný súbor)</a>
-				<a href="http://localhost:8111/import?url={{ webroot }}/buildings_{{ city }}.geojson">(JOSM)</a>
+				<a href="buildings_{{ citycode }}.geojson">Budovy v OSM (pomocný súbor)</a>
+				<a href="http://localhost:8111/import?url={{ webroot }}/buildings_{{ citycode }}.geojson">(JOSM)</a>
 				</p>
 
 				Overpass query - budovy a adresné body:<br/>
