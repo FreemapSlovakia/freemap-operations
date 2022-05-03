@@ -89,7 +89,7 @@ muni_replacement_map = streetname_map.muni_replacement_map
 
 def save_html(**kwargs):
     """vyrenderuje a uloz stranku obce do html suboru"""
-    with open(f"{city}/index.html", "w") as f:
+    with open(f"{citycode}/index.html", "w") as f:
         f.write(template.render(kwargs))
 
 
@@ -148,10 +148,10 @@ class Boundary:
         self.hranice_obci = self.hranice_obci.merge(
             kod_nazovobce, on="kod_zuj", how="left"
         )
-        self.hranice_obci.set_index("naz_zuj", inplace=True)
-        self.hranice_obci.index = self.hranice_obci.index.to_series().apply(
-            lambda n: n.replace(" - mestská časť ", "-")
-        )
+        self.hranice_obci.set_index("kod_zuj", inplace=True)
+        #self.hranice_obci.index = self.hranice_obci.index.to_series().apply(
+            #lambda n: n.replace(" - mestská časť ", "-")
+        #)
 
     def poly(self, municipality=None):
         if not isinstance(municipality, list):
@@ -371,19 +371,19 @@ def normalize_streetnames(g):
                 g.at[x, "nstreet"] = good_name
 
 
-def cut(g, city):
+def cut(g, citycode):
     """vyrez body podla hranic obce/obci (str alebo list)"""
     global boundary
-    poly = boundary.poly(city)
+    poly = boundary.poly(citycode)
     poly.loc[:, "group"] = "default"
     poly = poly.dissolve(by="group")
     return g[g.intersects(poly.geometry["default"])]
 
 
-def dropped_points(g, city):
+def dropped_points(g, citycode):
     """zobrazi odrezane body"""
     global boundary
-    poly = boundary.poly(city)
+    poly = boundary.poly(citycode)
     poly.loc[:, "group"] = "default"
     poly = poly.dissolve(by="group")
     return g[~g.intersects(poly.geometry["default"])]
@@ -623,14 +623,14 @@ def get_osm_streets(polygons):
     return set([x for x in ret if x])
 
 
-def check_overlapping_buildings(g, city):
+def check_overlapping_buildings(g, citycode):
     duplicates = g[g.index.duplicated()]
     if len(duplicates) > 0:
         info(duplicates.geometry)
     return (g[~g.index.duplicated()], duplicates.loc[:, ("lat", "lon")])
 
 
-def to_datasource(g, city):
+def to_datasource(g, citycode):
     result = []
     g = g.loc[
         :,
@@ -705,14 +705,14 @@ def check_josm():
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", type=str, dest='outdir', metavar='OUTDIR', help="cesta, kde bude vytvoreny adresar s nazvom obce, standardne: ak nie je definovany v config.yaml pouzije sa aktualny adresar (ak nie je definovany)", default=".")
-    parser.add_argument("city", help="mesto/obec, ktore/a sa ma spracovat")
+    parser.add_argument("citycode", help="kod mesta/obce, ktore/a sa ma spracovat")
     args = parser.parse_args()
     return args
 
 
 if __name__ == "__main__":
     args = parse_args()
-    city = args.city
+    citycode = args.citycode
     outdir = args.outdir
     if outdir != '.':
         print(f'Presuvam sa do adresara {outdir}')
@@ -723,37 +723,37 @@ if __name__ == "__main__":
             print(f'Presuvam sa do adresara {outdir}')
             os.chdir(outdir)
 
-    buildings_json = f"{city}/buildings_{city}.geojson"
-    addrnodes_json = f"{city}/addrnodes_{city}.geojson"
+    buildings_json = f"{citycode}/buildings_{citycode}.geojson"
+    addrnodes_json = f"{citycode}/addrnodes_{citycode}.geojson"
     date_generated = datetime.now().strftime("%d. %m. %Y o %H:%M")
 
-    source_osm = f"{city}/source_{city}.osm"
-    source_json = f"{city}/source_{city}.geojson"
+    source_osm = f"{citycode}/source_{citycode}.osm"
+    source_json = f"{citycode}/source_{citycode}.geojson"
 
-    result_osm = f"{city}/result_{city}.osm"
-    result_json = f"{city}/result_{city}.geojson"
+    result_osm = f"{citycode}/result_{citycode}.osm"
+    result_json = f"{citycode}/result_{citycode}.geojson"
 
-    filtered_csv = f"{city}/{city}_filtered.csv"
+    filtered_csv = f"{citycode}/{citycode}_filtered.csv"
 
-    outside_buildings_json = f"{city}/outside_buildings_{city}.geojson"
-    list_file = f"{city}/{city}_list.txt"
+    outside_buildings_json = f"{citycode}/outside_buildings_{citycode}.geojson"
+    list_file = f"{citycode}/{citycode}_list.txt"
 
-    outside_boundaries_json = f"{city}/{city}_outside_boundaries.geojson"
+    outside_boundaries_json = f"{citycode}/{citycode}_outside_boundaries.geojson"
 
-    original_city_boundary = f"{city}/{city}_original_boundary.geojson"
-    simplified_city_boundary = f"{city}/{city}_simplified_boundary.geojson"
+    original_city_boundary = f"{citycode}/{citycode}_original_boundary.geojson"
+    simplified_city_boundary = f"{citycode}/{citycode}_simplified_boundary.geojson"
 
     overpass_query = ""
 
-    if not os.path.exists(city):
-        os.mkdir(city)
+    if not os.path.exists(citycode):
+        os.mkdir(citycode)
 
-    info(f"Spusta sa spracovanie obce/mesta {city}..")
+    info(f"Spusta sa spracovanie obce/mesta {citycode}..")
 
     info("Stahuju sa nove data z MINV, ak su k dispozicii..")
-    get_minv_data()
+    # get_minv_data()
 
-    csv_file = zipfile.ZipFile("adresy.zip").namelist()[0]
+    csv_file = zipfile.ZipFile("noveadresy.zip").namelist()[0]
     date_match = re.match(
         r"Adresy_(?P<year>[0-9]{4})-(?P<month>[0-9]{2})-(?P<day>[0-9]{2})", csv_file
     )
@@ -764,7 +764,7 @@ if __name__ == "__main__":
     api = API(timeout=300, endpoint='https://overpass.freemap.sk/api/interpreter')
 
     info("Zostavujem polygon(y) pre Overpass query..")
-    polygon_geometry = boundary.poly(city).geometry[0]
+    polygon_geometry = boundary.poly(citycode).geometry[0]
     info("Ukladam povodne hranice obce do suboru..")
 
     with fiona.open(
@@ -806,13 +806,13 @@ if __name__ == "__main__":
 
     info(f"Nacitam .csv subor {csv_file}..")
 
-    zipped_csv_file = zipfile.ZipFile("adresy.zip")
+    zipped_csv_file = zipfile.ZipFile("noveadresy.zip")
     filtered = []
     with zipped_csv_file.open(zipped_csv_file.namelist()[0]) as f:
         for line in f:
             line = line.decode("utf-8").strip()
             # are we sure this is safe?
-            if city != line.split(',')[4] and "ADRBOD_X" not in line:
+            if citycode != line.split(',')[-1] and "ADRBOD_X" not in line:
                 continue
             filtered.append(line)
     filtered = "\n".join(filtered)
@@ -851,7 +851,8 @@ if __name__ == "__main__":
 
     normalize_streetnames(adresy_gdf)
 
-    city_gdf = adresy_gdf.loc[adresy_gdf.city == city]
+    city_gdf = adresy_gdf.loc[adresy_gdf.municipalityCode == citycode]
+    city = city_gdf.city[0]
 
     info("Zistujem priemernu a max. vzdialenost bodov v ramci jednej adresy")
     suspicious_distances = pd.DataFrame(columns=["name", "ratio"])
@@ -887,8 +888,8 @@ if __name__ == "__main__":
     minv_streets = set([x for x in city_gdf.nstreet if x])
 
     info("Orezavam body podla hranic obce")
-    dropped_points = dropped_points(city_gdf, city)
-    city_gdf = cut(city_gdf, city)
+    dropped_points = dropped_points(city_gdf, citycode)
+    city_gdf = cut(city_gdf, citycode)
 
     info(f"Orezanych {len(dropped_points)} adresnych bodov")
     if not dropped_points.empty:
@@ -953,8 +954,8 @@ if __name__ == "__main__":
         }
     )
 
-    z2, duplicates = check_overlapping_buildings(z2, city)
-    to_datasource(z2, city)
+    z2, duplicates = check_overlapping_buildings(z2, citycode)
+    to_datasource(z2, citycode)
 
     info("Hladam adresne body mimo budov..")
     address_outside_of_building = gpd.sjoin(
