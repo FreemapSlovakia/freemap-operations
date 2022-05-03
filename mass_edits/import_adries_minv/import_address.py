@@ -959,7 +959,7 @@ if __name__ == "__main__":
     info("Hladam adresne body mimo budov..")
     address_outside_of_building = gpd.sjoin(
         buildings_gdf,
-        gpd.GeoDataFrame({"geometry": city_gdf.buffer(0.00003)}),
+        gpd.GeoDataFrame({"geometry": city_gdf.buffer(0.00009)}),
         how="right",
         op="intersects",
     )
