@@ -930,13 +930,13 @@ if __name__ == "__main__":
     # potrebujeme zoznam budov, ktore nebude import brat do uvahy, pretoze
     # sa na nich nachadza adresny bod, preto urobime ich prienik
     z1 = gpd.sjoin(
-        buildings_gdf, addrnodes_gdf, how="inner", op="intersects", lsuffix="x", rsuffix="y"
+        buildings_gdf, addrnodes_gdf, how="inner", predicate="intersects", lsuffix="x", rsuffix="y"
     )
 
     osm_addr_count = save_osm_city(overpass_query, ignored_ways=set(z1.index))
 
     z2 = gpd.sjoin(
-        buildings_gdf, city_gdf, how="right", op="intersects", lsuffix="x", rsuffix="y"
+        buildings_gdf, city_gdf, how="right", predicate="intersects", lsuffix="x", rsuffix="y"
     )
 
     buildings_gdf.loc[:, ('geometry')].to_file('/tmp/buildings')
@@ -958,15 +958,17 @@ if __name__ == "__main__":
     to_datasource(z2, citycode)
 
     info("Hladam adresne body mimo budov..")
+    # pouzivame metre a tak potrebujeme docasne zmenit projekciu
     address_outside_of_building = gpd.sjoin(
-        buildings_gdf,
-        gpd.GeoDataFrame({"geometry": city_gdf.buffer(0.00009)}),
+        buildings_gdf.to_crs(crs=3857),
+        gpd.GeoDataFrame({"geometry": city_gdf.to_crs(crs=3857).buffer(9.00009)}),
         how="right",
-        op="intersects",
+        predicate="intersects",
     )
     address_outside_of_building = address_outside_of_building[
         address_outside_of_building.index_left.isnull()
     ]
+    address_outside_of_building = address_outside_of_building.to_crs(crs=4326)
     open(outside_buildings_json, "w").write(address_outside_of_building.to_json())
 
     info("Spajam s datami z OSM..")
