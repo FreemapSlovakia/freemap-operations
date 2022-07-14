@@ -454,7 +454,7 @@ replacement_map = {
     'Nad Potokom': 'Nad potokom',
     'Nad Školou': 'Nad školou',
     'Nad Tehelňou': 'Nad tehelňou',
-    'Na Hlinách': 'Na hlinách',
+    # 'Na Hlinách': 'Na hlinách',  na Hlinach (teda s velkym) schvalili poslanci vo VZN 12/2015 (https://novadubnica.eu/vseobecne-zavazne-nariadenie-c-12-2015-mesta-nova-dubnica)
     'Na Hôrke': 'Na hôrke',
     'Na Hôrke': 'Na hôrke',
     'Na Hrádzi': 'Na hrádzi',
