@@ -103,7 +103,7 @@ def create_housenumber(n):
 
 def get_minv_data():
     """stiahne najnovsie data (ak su k dispozicii) MINV"""
-    size_on_server = int(requests.head(minv_url).headers["Content-Length"])
+    size_on_server = int(requests.head(minv_url, allow_redirects=True).headers["Content-Length"])
     if os.path.exists("adresy.zip"):
         local_size = os.stat("adresy.zip").st_size
     else:
@@ -751,9 +751,9 @@ if __name__ == "__main__":
     info(f"Spusta sa spracovanie obce/mesta {citycode}..")
 
     info("Stahuju sa nove data z MINV, ak su k dispozicii..")
-    # get_minv_data()
+    get_minv_data()
 
-    csv_file = zipfile.ZipFile("noveadresy.zip").namelist()[0]
+    csv_file = zipfile.ZipFile("adresy.zip").namelist()[0]
     date_match = re.match(
         r"Adresy_(?P<year>[0-9]{4})-(?P<month>[0-9]{2})-(?P<day>[0-9]{2})", csv_file
     )
@@ -761,7 +761,7 @@ if __name__ == "__main__":
 
     boundary = Boundary()
 
-    api = API(timeout=300, endpoint='https://overpass.freemap.sk/api/interpreter')
+    api = API(timeout=300, endpoint='https://overpassw.freemap.sk/api/interpreter')
 
     info("Zostavujem polygon(y) pre Overpass query..")
     polygon_geometry = boundary.poly(citycode).geometry[0]
@@ -806,7 +806,7 @@ if __name__ == "__main__":
 
     info(f"Nacitam .csv subor {csv_file}..")
 
-    zipped_csv_file = zipfile.ZipFile("noveadresy.zip")
+    zipped_csv_file = zipfile.ZipFile("adresy.zip")
     filtered = []
     with zipped_csv_file.open(zipped_csv_file.namelist()[0]) as f:
         for line in f:
