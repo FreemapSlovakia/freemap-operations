@@ -393,6 +393,8 @@ def validate_osm_addresses2(x):
     ret = defaultdict(gpd.GeoDataFrame)
     if "addr:streetnumber" not in x.columns:
         return ret
+    if "addr:conscriptionnumber" not in x.columns:
+        return ret
     ret["mismatching_addresses"] = x[
         (x["addr:housenumber"].str.contains("/", na=False))
         & (
@@ -434,8 +436,12 @@ def crosscheck_addresses(minv, osm):
     ret = defaultdict(gpd.GeoDataFrame)
     if "addr:streetnumber" not in osm.columns:
         return ret
+    if "addr:conscriptionnumber" not in osm.columns:
+        return ret
     minv = minv.drop_duplicates()
     merged = minv.merge(osm, on=("addr:conscriptionnumber", "addr:streetnumber"))
+    if merged.empty:
+        return ret
     ret["bad_street"] = merged[
         (~merged["addr:street_y"].isnull())
         & (merged["nstreet"] != "")
