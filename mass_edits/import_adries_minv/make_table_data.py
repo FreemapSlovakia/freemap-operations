@@ -46,7 +46,6 @@ for kodobce in glob('*'):
     except:
         continue
     obec = root.xpath('/html/head/title')[0].text
-    ascii_name = unicodedata.normalize('NFD', obec).encode('ascii', 'ignore').decode()
     filtered_csv = glob(path.join(kodobce, '*_filtered.csv'))
     if not filtered_csv: continue
     filtered_csv = filtered_csv[0]
@@ -70,9 +69,6 @@ for kodobce in glob('*'):
         color = '#FF0000'
     else:
         color = '#00FF00'
-
-    if ascii_name != obec:
-        obec = f'{obec} ({ascii_name})'
 
     data.append(
             {

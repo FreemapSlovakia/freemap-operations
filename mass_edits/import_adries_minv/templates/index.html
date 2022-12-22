@@ -25,6 +25,13 @@
 				Táto stránka vyžaduje zapnutý Javascript. Ako alternatívu môžete použiť <a href="index2.html">tento zoznam</a> odkazov na jednotlivé obce/mestá.
 				</div>
 				<script>
+		     function nameFilter(headerValue, rowValue, rowData, filterParams) {
+            const combining = /[\u0300-\u036F]/g
+            var obec_normalized = rowValue.normalize('NFKD').replace(combining, '').toLowerCase()
+            var rowfilter_normalized = headerValue.normalize('NFKD').replace(combining, '').toLowerCase().trim()
+            return obec_normalized.indexOf(rowfilter_normalized) != -1
+          }
+
 					var table = new Tabulator("#main-table", {
 											ajaxURL: window.location + "obce.json",
 											layout: "fitData",
@@ -57,9 +64,9 @@
 											paginationCounter:"rows",
 											columns: [
 																	{title: "Kód obce", field: "KodObce", headerFilter: "input"},
-																	{title: "Obec/Mesto", field: "Obec", headerFilter: "input"},
-																	{title: "Okres", field: "Okres", headerFilter: "input"},
-																	{title: "Kraj", field: "Kraj", headerFilter: "input"},
+												          {title: "Obec/Mesto", field: "Obec", headerFilter: "input", headerFilterFunc: nameFilter},
+                                  {title: "Okres", field: "Okres", headerFilter: "input", headerFilterFunc: nameFilter},
+                                  {title: "Kraj", field: "Kraj", headerFilter: "input", headerFilterFunc: nameFilter},
 																	{title: "Generované", field: "Generované"},
 																	{title: "Prekrývajúce sa<br/>budovy", field: "Budovy", formatter: "color"},
 																	{title: "Výsledok", field: "Výsledok"},
