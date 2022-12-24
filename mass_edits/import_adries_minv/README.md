@@ -65,4 +65,4 @@ $ firefox Trnava/index.html
 
 ## Poznamka
 
-Chybu "recevied corrupt data from Overpass" je mozne riesit tymto patchom: https://github.com/mvexel/overpass-api-python-wrapper/issues/135.
+Chybu "received corrupt data from Overpass" je mozne riesit tymto patchom: https://github.com/mvexel/overpass-api-python-wrapper/issues/135.
