@@ -17,7 +17,7 @@
 			<body>
 				<div id="title">
 					<h2>MINV dáta (adresy) vs OSM</h2>
-					<p>Kliknutím na názov obce sa otvorí okno s výsledkom spracovania. Po kliknutí na posledný stĺpec sa výsledný súbor otvorí v JOSM (je nutné povoliť Remote control v nastaveniach JOSM).</p>
+					<p>Kliknutím na názov obce sa otvorí okno s výsledkom spracovania. Po kliknutí na stĺpec pod logom JOSM sa výsledný súbor otvorí v tomto editore (je nutné povoliť Remote control v nastaveniach JOSM).</p>
 					<p>Táto tabuľka bola vygenerovaná dňa {{ today }}. Spracovanie všetkých obcí spravidla beží v týždennom intervale a trvá približne 15 hodín.</p>
 					<p>Zdrojový kód nájdete na <a href="https://github.com/FreemapSlovakia/freemap-operations/tree/master/mass_edits/import_adries_minv">https://github.com/FreemapSlovakia/freemap-operations</a></p>
 				</div>
@@ -68,8 +68,23 @@
                                   {title: "Okres", field: "Okres", headerFilter: "input", headerFilterFunc: nameFilter},
                                   {title: "Kraj", field: "Kraj", headerFilter: "input", headerFilterFunc: nameFilter},
 																	{title: "Generované", field: "Generované"},
-																	{title: "Prekrývajúce sa<br/>budovy", field: "Budovy", formatter: "color"},
-																	{title: "Výsledok", field: "Výsledok"},
+												          {title: "⮼",
+													         field: "Budovy",
+																	 formatter: "color",
+																	 headerTooltip: "Prekrývajúce sa<br>budovy"},
+												          {title: "<img src='https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/JOSM_Logotype_2019.svg/180px-JOSM_Logotype_2019.svg.png' width=30px>",
+																	 field: "Výsledok",
+																	 headerTooltip: "Otvoriť v JOSM",
+													         headerSort: false},
+																	{title: "OSM",
+																	field: "OSM",
+																	topCalc: "sum"},
+																	{title: "MINV",
+																	field: "MINV",
+																	topCalc: "sum"},
+																	{title: "%",
+																	field: "ratio",
+																	},
 																],
 											initialSort:[
 																	{column:"Obec", dir:"asc"},
@@ -79,7 +94,7 @@
 											clicked_text = cell._cell.value;
 											city = cell._cell.element.parentElement.firstElementChild.textContent.split(" (")[0];
 											console.log(clicked_text);
-											if ( clicked_text != "JOSM" )
+											if ( clicked_text != "🡕" )
 											{
 																	window.open(city);
 																}
