@@ -27,9 +27,9 @@ env = Environment(loader=FileSystemLoader("templates"))
 template = env.get_template("index.html")
 today = datetime.today().strftime('%c')
 # január/február.. => ..a
-today = re.sub(r'([rljn])\s', lambda n: f'{n.group(1)}a ', today, re.U)
+today = re.sub(r'([rljnt])\s', lambda n: f'{n.group(1)}a ', today, re.U)
 # september/október/november => ..ra
-today = re.sub('er\s', 'ra ', today, re.U)
+today = re.sub('era\s', 'ra ', today, re.U)
 # marec => ..ca
 today = re.sub('ec\s', 'ca ', today, re.U)
 
@@ -46,6 +46,9 @@ for kodobce in glob('*'):
     except:
         continue
     obec = root.xpath('/html/head/title')[0].text
+    osm_count, minv_count = [x.text.split(': ')[-1]
+                             for x in root.xpath('/html/body/div/aside/p/a')
+                             if x.text.startswith(('OSM:', 'MINV:'))]
     filtered_csv = glob(path.join(kodobce, '*_filtered.csv'))
     if not filtered_csv: continue
     filtered_csv = filtered_csv[0]
@@ -78,7 +81,10 @@ for kodobce in glob('*'):
                 'Kraj': kraj,
                 'Generované': generated,
                 'Budovy': color,
-                'Výsledok': 'JOSM',
+                'Výsledok': '🡕',
+                'OSM': osm_count,
+                'MINV': minv_count,
+                'ratio': '{:.1f}'.format(int(osm_count) * 100/int(minv_count)),
                 })
 
 with open(htmlout, 'w') as f:
