@@ -138,20 +138,8 @@ def to_str_or_zero(i):
 class Boundary:
     def __init__(self):
         info("Nacitam hranice obci (ZSJ)..")
-        gdf = gpd.read_file(os.path.join(os.path.dirname(__file__), "zsj84"), encoding="utf8")
-        gdf2 = gdf.loc[:, ("kod_zuj", "naz_zuj", "geometry")]
-        kod_nazovobce = gdf2.loc[:, ("kod_zuj", "naz_zuj")].drop_duplicates()
-        self.hranice_obci = gpd.GeoDataFrame(
-            gdf2.groupby("kod_zuj").geometry.agg(shapely.ops.unary_union).reset_index(),
-            geometry="geometry",
-        )
-        self.hranice_obci = self.hranice_obci.merge(
-            kod_nazovobce, on="kod_zuj", how="left"
-        )
+        self.hranice_obci = gpd.read_file(os.path.join(os.path.dirname(__file__), 'hranice'))
         self.hranice_obci.set_index("kod_zuj", inplace=True)
-        #self.hranice_obci.index = self.hranice_obci.index.to_series().apply(
-            #lambda n: n.replace(" - mestská časť ", "-")
-        #)
 
     def poly(self, municipality=None):
         if not isinstance(municipality, list):
