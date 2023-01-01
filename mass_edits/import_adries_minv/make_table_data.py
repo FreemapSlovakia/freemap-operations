@@ -11,6 +11,7 @@ import time
 import unicodedata
 import yaml
 
+# set locale to get localized day of week + month in date
 locale.setlocale(locale.LC_ALL, 'sk_SK.utf8')
 
 with open('config.yaml') as f:
@@ -25,13 +26,22 @@ indexpage = path.join(inputdir, 'index.html')
 
 env = Environment(loader=FileSystemLoader("templates"))
 template = env.get_template("index.html")
-today = datetime.today().strftime('%c')
+today = datetime.today()
+
+date = today.strftime('%c')
+day_of_week = today.strftime('%A').lower()
+# remove day of week from the beginning
+date = ' '.join(re.split('\s', date)[1:])
+
 # január/február.. => ..a
-today = re.sub(r'([rljnt])\s', lambda n: f'{n.group(1)}a ', today, re.U)
+date = re.sub(r'([rljnt])\s', lambda n: f'{n.group(1)}a ', date, re.U)
 # september/október/november => ..ra
-today = re.sub('era\s', 'ra ', today, re.U)
+date = re.sub('era\s', 'ra ', date, re.U)
 # marec => ..ca
-today = re.sub('ec\s', 'ca ', today, re.U)
+date = re.sub('ec\s', 'ca ', date, re.U)
+
+# reassemble
+date = f'{date} ({day_of_week})'
 
 data = list()
 obce = list()

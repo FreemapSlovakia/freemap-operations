@@ -1,9 +1,11 @@
 <html>
-	<link href="https://www.tabulator.info/css/tabulator/5.2/tabulator.css" rel="stylesheet">
-	<link href="dist/css/tabulator.min.css" rel="stylesheet">
-	<title>MINV adresy vs OSM</title>
-			<script type="text/javascript" src="dist/js/tabulator.min.js"></script>
-			<style>
+<head>
+  <link href="https://www.tabulator.info/css/tabulator/5.2/tabulator.css" rel="stylesheet">
+  <link href="dist/css/tabulator.min.css" rel="stylesheet">
+  <title>MINV adresy vs OSM</title>
+  <script type="text/javascript" src="dist/js/tabulator.min.js"></script>
+  <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+  <style>
 #title {
   height: fit-content;
   padding: 0;
@@ -11,102 +13,100 @@
  #main-table {
    height: 80%;
  }
-			</style>
-			<head>
-			</head>
-			<body>
-				<div id="title">
-					<h2>MINV dáta (adresy) vs OSM</h2>
-					<p>Kliknutím na názov obce sa otvorí okno s výsledkom spracovania. Po kliknutí na stĺpec pod logom JOSM sa výsledný súbor otvorí v tomto editore (je nutné povoliť Remote control v nastaveniach JOSM).</p>
-					<p>Táto tabuľka bola vygenerovaná dňa {{ today }}. Spracovanie všetkých obcí spravidla beží v týždennom intervale a trvá približne 15 hodín.</p>
-					<p>Zdrojový kód nájdete na <a href="https://github.com/FreemapSlovakia/freemap-operations/tree/master/mass_edits/import_adries_minv">https://github.com/FreemapSlovakia/freemap-operations</a></p>
-				</div>
-				<div id="main-table">
-				Táto stránka vyžaduje zapnutý Javascript. Ako alternatívu môžete použiť <a href="index2.html">tento zoznam</a> odkazov na jednotlivé obce/mestá.
-				</div>
-				<script>
-		     function nameFilter(headerValue, rowValue, rowData, filterParams) {
-            const combining = /[\u0300-\u036F]/g
-            var obec_normalized = rowValue.normalize('NFKD').replace(combining, '').toLowerCase()
-            var rowfilter_normalized = headerValue.normalize('NFKD').replace(combining, '').toLowerCase().trim()
-            return obec_normalized.indexOf(rowfilter_normalized) != -1
-          }
+   </style>
+</head>
+<body>
+  <div id="title">
+    <h2>MINV dáta (adresy) vs OSM</h2>
+    <p>Kliknutím na názov obce sa otvorí okno s výsledkom spracovania. Po kliknutí na stĺpec pod logom JOSM sa výsledný súbor otvorí v tomto editore (je nutné povoliť Remote control v nastaveniach JOSM).</p>
+    <p>Táto tabuľka bola vygenerovaná dňa {{ date }}. Spracovanie všetkých obcí spravidla beží v týždennom intervale a trvá približne 15 hodín.</p>
+    <p>Zdrojový kód nájdete na <a href="https://github.com/FreemapSlovakia/freemap-operations/tree/master/mass_edits/import_adries_minv">https://github.com/FreemapSlovakia/freemap-operations</a></p>
+  </div>
+  <div id="dnl_buttons">
+    <button id="download-csv">Stiahnuť CSV</button>
+    <button id="download-xlsx">Stiahnuť XLSX</button>
+  </div>
+  <div id="main-table">
+  Táto stránka vyžaduje zapnutý Javascript. Ako alternatívu môžete použiť <a href="index2.html">tento zoznam</a> odkazov na jednotlivé obce/mestá.</div>
+  <script>
+  function nameFilter(headerValue, rowValue, rowData, filterParams) {
+    const combining = /[\u0300-\u036F]/g
+    var obec_normalized = rowValue.normalize('NFKD').replace(combining, '').toLowerCase()
+    var rowfilter_normalized = headerValue.normalize('NFKD').replace(combining, '').toLowerCase().trim()
+    return obec_normalized.indexOf(rowfilter_normalized) != -1
+  }
 
-					var table = new Tabulator("#main-table", {
-											ajaxURL: window.location + "obce.json",
-											layout: "fitData",
-											responsiveLayout: "hide",
-											tooltips: true,
-											addRowPos: "top",
-											pagination: "local",
-											langs: {
-																	"sk-sk": {
-																							"pagination": {
-																													"first": "Prvá",
-																													"first_title": "Prvá strana",
-																													"last": "Posledná",
-																													"last_title": "Posledná strana",
-																													"prev": "Predchádzajúca",
-																													"prev_title": "Predch strana",
-																													"next": "Ďalšia",
-																													"next_title": "Ďalšia strana",
-																													"all": "Všetky",
-																													"page_title": "Zobraziť stranu",
-																													"counter": {
-																																			"showing": "Zobrazuje sa",
-																																			"of": "z",
-																																			"rows": "riadkov",
-																																			"pages": "strán",
-																																		}
-																												},
-																						}
-																},
-											paginationCounter:"rows",
-											columns: [
-																	{title: "Kód obce", field: "KodObce", headerFilter: "input"},
-												          {title: "Obec/Mesto", field: "Obec", headerFilter: "input", headerFilterFunc: nameFilter},
-                                  {title: "Okres", field: "Okres", headerFilter: "input", headerFilterFunc: nameFilter},
-                                  {title: "Kraj", field: "Kraj", headerFilter: "input", headerFilterFunc: nameFilter},
-																	{title: "Generované", field: "Generované"},
-												          {title: "⮼",
-													         field: "Budovy",
-																	 formatter: "color",
-																	 headerTooltip: "Prekrývajúce sa<br>budovy"},
-												          {title: "<img src='https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/JOSM_Logotype_2019.svg/180px-JOSM_Logotype_2019.svg.png' width=30px>",
-																	 field: "Výsledok",
-																	 headerTooltip: "Otvoriť v JOSM",
-													         headerSort: false},
-																	{title: "OSM",
-																	field: "OSM",
-																	topCalc: "sum"},
-																	{title: "MINV",
-																	field: "MINV",
-																	topCalc: "sum"},
-																	{title: "%",
-																	field: "ratio",
-																	},
-																],
-											initialSort:[
-																	{column:"Obec", dir:"asc"},
-																],
-										});
-					table.on("cellClick", function(e, cell){
-											clicked_text = cell._cell.value;
-											city = cell._cell.element.parentElement.firstElementChild.textContent.split(" (")[0];
-											console.log(clicked_text);
-											if ( clicked_text != "🡕" )
-											{
-																	window.open(city);
-																}
-											else {
-																	window.open('http://localhost:8111/import?url=' + window.location + city + '/result_' + city + '.osm',
-																							'_blank');
-																	window.open().close();
-																};
-										});
-					table.on("tableBuilt", function() {
-											table.setLocale("sk-sk");
-										});
-				</script>
-			</body>
+  var table = new Tabulator("#main-table", {
+                  ajaxURL: window.location + "obce.json",
+                  layout: "fitData",
+                  responsiveLayout: "hide",
+                  tooltips: true,
+                  addRowPos: "top",
+                  pagination: "local",
+                  langs: { "sk-sk": { "pagination": { "first": "Prvá",
+                                                      "first_title": "Prvá strana",
+                                                      "last": "Posledná",
+                                                      "last_title": "Posledná strana",
+                                                      "prev": "Predchádzajúca",
+                                                      "prev_title": "Predch strana",
+                                                      "next": "Ďalšia",
+                                                      "next_title": "Ďalšia strana",
+                                                      "all": "Všetky",
+                                                      "page_title": "Zobraziť stranu",
+                                                      "counter": { "showing": "Zobrazuje sa",
+                                                                   "of": "z",
+                                                                   "rows": "riadkov",
+                                                                   "pages": "strán",
+                                                                    }
+                                                        },
+                                            }
+                                },
+                  paginationCounter:"rows",
+                  columns: [ {title: "Kód obce", field: "KodObce", headerFilter: "input"},
+                             {title: "Obec/Mesto", field: "Obec", headerFilter: "input", headerFilterFunc: nameFilter},
+                             {title: "Okres", field: "Okres", headerFilter: "input", headerFilterFunc: nameFilter},
+                             {title: "Kraj", field: "Kraj", headerFilter: "input", headerFilterFunc: nameFilter},
+                             {title: "Generované", field: "Generované"},
+                             {title: "⮼",
+                             field: "Budovy",
+                             formatter: "color",
+                             headerTooltip: "Prekrývajúce sa<br>budovy"},
+                             {title: "<img src='https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/JOSM_Logotype_2019.svg/180px-JOSM_Logotype_2019.svg.png' width=30px>",
+                             field: "Výsledok",
+                             headerTooltip: "Otvoriť v JOSM",
+                             headerSort: false},
+                             {title: "OSM",
+                              field: "OSM",
+                              topCalc: "sum"},
+                             {title: "MINV",
+                              field: "MINV",
+                              topCalc: "sum"},
+                             {title: "%",
+                              field: "ratio",
+                              } ],
+                      initialSort:[ {column:"Obec", dir:"asc"} ],
+                    })
+          table.on("cellClick", function(e, cell){
+                   clicked_text = cell._cell.value
+                   city = cell._cell.element.parentElement.firstElementChild.textContent.split(" (")[0]
+                   if ( clicked_text != "🡕" )
+                      {
+                      window.open(city)
+                      }
+                      else { window.open('http://localhost:8111/import?url=' + window.location + city + '/result_' + city + '.osm',
+                                         '_blank')
+                             window.open().close()
+                            }
+                    })
+          table.on("tableBuilt", function() { table.setLocale("sk-sk") })
+
+	        // make download buttons work
+          document.getElementById("download-csv").addEventListener("click", function(){
+          table.download("csv", "osm_minv.csv") })
+
+          document.getElementById("download-xlsx").addEventListener("click", function(){
+          table.download("xlsx", "osm_minv.xlsx", {sheetName:"OSM_MINV"}) })
+
+        </script>
+      </body>
 </html>
