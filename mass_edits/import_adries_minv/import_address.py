@@ -755,7 +755,7 @@ if __name__ == "__main__":
 
     boundary = Boundary()
 
-    api = API(timeout=300, endpoint='https://overpassw.freemap.sk/api/interpreter')
+    api = API(timeout=300, endpoint='https://overpass.freemap.sk/api/interpreter')
 
     info("Zostavujem polygon(y) pre Overpass query..")
     polygon_geometry = boundary.poly(citycode).geometry[0]
