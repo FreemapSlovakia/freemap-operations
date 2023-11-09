@@ -25,7 +25,7 @@ async function addOSMReferenceToWikidata(
     headers: {
       "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
       cookie:
-        "GeoIP=SK:KI:Ko__ice:48.69:21.20:v4; wikidatawikimwuser-sessionId=a4817c5ac2252c59f881; wikidatawikiss0-UserID=6403112; wikidatawikiUserID=6403112; wikidatawikiss0-UserName=Martin%20%C5%BDdila; wikidatawikiUserName=Martin%20%C5%BDdila; centralauth_ss0-User=Martin%20%C5%BDdila; centralauth_User=Martin%20%C5%BDdila; centralauth_ss0-Token=95359c7c364d4f0ff20ce0f077959f3f; centralauth_Token=95359c7c364d4f0ff20ce0f077959f3f; loginnotify_prevlogins=2023-1l7ip7n-6lhsxabquwqphu0mwe4hrtg6fs3rtp5; ss0-wikidatawikiSession=d3j68e9r9k8t6jsckp3rtjmc20aq644u; ss0-centralauth_Session=b6c5ef3dbda7db2ba6c9ae066b046056; centralauth_Session=e438f95408e9b4425c75ea0f91873000; WMF-Last-Access=09-Nov-2023; WMF-Last-Access-Global=09-Nov-2023; NetworkProbeLimit=0.001; wikidatawikiSession=bht2oennp21d8f44crfk9r561bb18ngi"
+        "PUT_HERE_YOUR_OWN"
     },
     body: new URLSearchParams({
       action: "wbcreateclaim",
@@ -35,7 +35,7 @@ async function addOSMReferenceToWikidata(
       snaktype: "value",
       value: JSON.stringify(String(osmId)),
       bot: "1",
-      token: "1e343b7afa808f8248e2622c943dd8b5654c8154+\\",
+      token: "PUT_HERE_YOUR_OWN",
     }).toString(),
   });
 
