@@ -1,14 +1,20 @@
 #!/usr/bin/env -S deno run --allow-net
 
 async function fetchWikidataItems(offset = 0, limit = 1000) {
-  const sparqlQuery = `
-      SELECT ?item ?itemLabel ?coord WHERE {
-          ?item wdt:P625 ?coord; wdt:P17 wd:Q214.
-          SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
-      }
-      LIMIT ${limit}
-      OFFSET ${offset}
-  `;
+//          wdt:P31 wd:Q55488.
+          // FILTER NOT EXISTS { ?item wdt:P31 wd:Q112094159. }
+          // FILTER NOT EXISTS { ?item wdt:P31 wd:Q1435490. }
+          // FILTER NOT EXISTS { ?item wdt:P31 wd:Q3947. }
+
+          const sparqlQuery = `
+          SELECT ?item ?itemLabel ?coord WHERE {
+              ?item wdt:P625 ?coord; wdt:P17 wd:Q214;
+              wdt:P31 wd:Q10862618.
+              SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+          }
+          LIMIT ${limit}
+          OFFSET ${offset}
+      `;
 
   const url =
     "https://query.wikidata.org/sparql?query=" +
