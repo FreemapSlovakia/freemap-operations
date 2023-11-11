@@ -4,7 +4,9 @@ This script retrieves all OSM features with `wikidata` tag and adds OSM referenc
 
 ## Requirements
 
-[Deno](https://deno.com)
+Install [Deno](https://deno.com).
+
+Script creates multiple references in a single wikidata entry if there are multiple objects in OSM with the same `wikidata` tag. Therefore it is more than recommended to first create `waterway`, `street`/`associatedStreet`, `railway` and other relations and move there `wikidata` tags.
 
 ## Running
 
