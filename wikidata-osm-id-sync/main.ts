@@ -39,18 +39,25 @@ async function addOSMReferenceToWikidata(
     }).toString(),
   });
 
-  if (!response.ok) {
-    console.error(await response.text());
+    if (!response.ok) {
+      console.error(await response.text());
 
-    Deno.exit(1);
-  }
+      await wait();
 
-  const res = await response.json();
+      continue;
+    }
 
-  if (res.error) {
-    console.error(JSON.stringify(res.error));
+    const res = await response.json();
 
-    Deno.exit(1);
+    if (res.error) {
+      console.error(JSON.stringify(res.error));
+
+      await wait();
+
+      continue;
+    }
+
+    break;
   }
 }
 
@@ -63,35 +70,66 @@ const propMapping: Record<string, string> = {
 for (const item of await getOSMData()) {
   const { wikidata } = item.tags;
 
-  const response = await fetch(
-    `https://www.wikidata.org/wiki/Special:EntityData/${wikidata}.json`
-  );
+  if (!/^Q\d+$/.test(wikidata)) {
+    console.log("Wrong wikidata", item);
 
-  const data = await response.json();
+    continue;
+  }
+
+  let data;
+
+  for (;;) {
+    const response = await fetch(
+      `https://www.wikidata.org/wiki/Special:EntityData/${wikidata}.json`
+    );
+
+    if (response.ok) {
+      data = await response.json();
+
+      break;
+    }
+
+    console.error(await response.text());
+
+    await wait();
+  }
+
+  if (!data.entities[wikidata]) {
+    console.warn("No wikidata entry", item.type, item.id, wikidata);
+    continue;
+  }
 
   const { claims = {} } = data.entities[wikidata];
 
   for (const [type, prop] of Object.entries(propMapping)) {
+    let create = true;
+
     if (item.type !== type) {
       if (claims[prop]) {
         console.warn("Reference type mismatch", item.type, item.id, wikidata);
       }
     } else {
-      if (claims[prop]?.[0]) {
-        if (claims[prop].length > 1) {
-          throw new Error("Unexpected multiple claims for a prop. " + item.type + ":" + item.id);
-        }
-
-        if (claims[prop][0].mainsnak.datavalue.value === String(item.id)) {
+      for (const items of claims[prop] ?? []) {
+        if (items.mainsnak.datavalue.value === String(item.id)) {
           console.info("OKAY", item.type, item.id, wikidata);
+
+          create = false;
         } else {
           console.warn("Reference ID mismatch", item.type, item.id, wikidata);
         }
-      } else {
+      }
+
+      if (create) {
         console.info("CREATE", item.type, item.id, wikidata);
 
         await addOSMReferenceToWikidata(wikidata, prop, item.id);
       }
     }
   }
+}
+
+async function wait() {
+  console.log("Sleeping...");
+
+  await new Promise((r) => setTimeout(r, 60000));
 }
