@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-greeter_osmsk.py 0.7
+greeter_osmsk.py 0.8
  skript, ktory sleduje newusers rss feed a ked objavi
  novacika editujuceho slovensko, posle mu uvitaciu spravu
 
@@ -18,16 +18,21 @@ historia
  0.6 - PEP8
      - neposielaj spravu o chybajucom source tagu pre changeset ak bol pouzity
        editor iD
- 0.7 - oprava posielanie po zmene URL na osm
+ 0.7 - oprava posielania po zmene URL na osm
+ 0.8 - osm auth/send: vymena beautifulsoup + requests za mechanize (po vzore https://github.com/osmcz/greeter-osm)
+       oprava deprecation warnings (bs4)
+
 """
 
 import argparse
 import bs4
 import configparser
 import logging
+import mechanize
 import os
 import requests
 import sys
+import urllib
 
 rssurl = 'http://resultmaps.neis-one.org/newestosmcountryfeed.php?c=Slovakia'
 
@@ -61,44 +66,26 @@ elif options.debug:
     logging.basicConfig(level=logging.DEBUG)
     logging.getLogger("requests").setLevel(logging.INFO)
 
-cookies = {}
-
 
 def osm_auth():
-    global cookies
     logging.debug('Authenticating..')
-    r = requests.get('https://www.openstreetmap.org/')
-    cookies = r.cookies
-    soup = bs4.BeautifulSoup(r.text, 'html.parser')
-    token = soup.find('meta', attrs={'name': 'csrf-token'})['content']
+    browser = mechanize.Browser()
+    browser.set_handle_robots(False)
+    browser.addheaders = [('User-agent', 'https://github.com/FreemapSlovakia/freemap-operations/tree/master/greeter_osm_sk')]
+    browser.open("https://www.openstreetmap.org/login/")
+    browser.select_form(id="login_form")
+    browser["username"] = senderlogin
+    browser["password"] = senderpass
+    browser.submit()
+    return browser
 
-    data = {'username': senderlogin,
-            'password': senderpass,
-            'authenticity_token': token
-            }
-    r = requests.post('https://www.openstreetmap.org/login',
-                      data=data, cookies=cookies)
-    logging.debug('OSM cookies: %s' % cookies)
-    soup = bs4.BeautifulSoup(r.text, 'html.parser')
-    token = soup.find('meta', attrs={'name': 'csrf-token'})['content']
-    if token:
-        return token
-    else:
-        raise Exception("token could not be obtained")
-
-
-def osm_send(token, subject, message, rcpt):
-    global cookies
-    data = {'authenticity_token': token,
-            'message[title]': subject,
-            'display_name': rcpt,
-            'message[body]': message,
-            'commit': 'Odoslať'
-            }
-    r = requests.post('https://www.openstreetmap.org/messages',
-                      data=data, cookies=cookies)
-    r.raise_for_status()
-
+def osm_send(browser, subject, message, rcpt):
+    logging.debug(f'Sending {subject}: {message}\n to {rcpt}')
+    browser.open(f"https://www.openstreetmap.org/messages/new/{rcpt}")
+    browser.select_form(id="new_message")
+    browser["message[title]"] = subject
+    browser["message[body]"] = message
+    browser.submit()
 
 config = configparser.RawConfigParser()
 currdir = os.path.dirname(sys.argv[0])
@@ -109,16 +96,16 @@ os.chdir(currdir)
 senderlogin = config.get('Auth', 'username')
 senderpass = config.get('Auth', 'password')
 
-token = osm_auth()
-logging.debug('OSM token is %s' % token)
+browser = osm_auth()
 
 if not options.u:
     r = requests.get(rssurl)
     r.raise_for_status()
     if r.status_code != 200:
         raise Exception('Error getting %s' % rssurl)
-    soup = bs4.BeautifulSoup(r.text, 'html.parser')
+    soup = bs4.BeautifulSoup(r.text, 'xml')
     userurls = [x.get_text() for x in soup.find_all('id')]
+    userurls = [x for x in userurls if x.startswith('https://')]
     userurls.reverse()
     statusfile = config.get('Files', 'statusfile')
     logging.debug('Status file: %s' % statusfile)
@@ -145,19 +132,20 @@ ideditormessage = config.get('Messages', 'ideditormessage')
 
 for user in userurls[ind+1:]:
     rcpt = user.split('/')[-1]
+    rcpt_quoted = urllib.parse.quote(rcpt)
 
     message = mainmessage.replace('%', ' ').replace('<nick>', rcpt)
 
-    r = requests.get('http://openstreetmap.org/user/%s/history' % rcpt)
+    r = requests.get('http://openstreetmap.org/user/%s/history' % rcpt_quoted)
     soup = bs4.BeautifulSoup(r.text, 'html.parser')
-    changeset = soup.findAll('a')[0]['href']
+    changeset = soup.find_all('a')[0]['href']
 
     logging.debug("Last changeset id: %s" % changeset)
 
     r = requests.get('http://openstreetmap.org/api/0.6%s' % changeset)
-    soup = bs4.BeautifulSoup(r.text, 'html.parser')
+    soup = bs4.BeautifulSoup(r.text, 'xml')
 
-    tags = {k['k']: k['v'] for k in soup.findAll('tag')}
+    tags = {k['k']: k['v'] for k in soup.find_all('tag')}
     logging.debug('changeset tags: %s' % tags)
 
     if not tags.get('source'):
@@ -176,7 +164,7 @@ for user in userurls[ind+1:]:
 
     if not options.nosend:
         logging.debug('sending message to user %s' % rcpt)
-        osm_send(token, 'Privitanie', message, rcpt)
+        osm_send(browser, 'Privitanie', message, rcpt_quoted)
     else:
         logging.debug('NOT sending (because you said so) the message to user %s' % rcpt)
     if not options.u:
