@@ -122,7 +122,13 @@ if not options.u:
 
     logging.debug('we left off at %s' % lastsent)
 else:
-    userurls = ['xxx/%s' % options.u[0]]
+    # user may give already encoded value, try to guess it
+    # not bulletproof, see https://stackoverflow.com/questions/2295223/how-to-find-out-if-string-has-already-been-url-encoded
+    param = options.u[0]
+    param_dec = urllib.parse.unquote(param)
+    if (param == param_dec): # not encoded
+        param = urllib.parse.quote(param)
+    userurls = ['xxx/%s' % param]
     ind = -1
 
 mainmessage = config.get('Messages', 'mainmessage')
@@ -131,18 +137,22 @@ nocommentmessage = config.get('Messages', 'nocommentmessage')
 ideditormessage = config.get('Messages', 'ideditormessage')
 
 for user in userurls[ind+1:]:
-    rcpt = user.split('/')[-1]
-    rcpt_quoted = urllib.parse.quote(rcpt)
+    rcpt_quoted = user.split('/')[-1]
+    rcpt = urllib.parse.unquote(rcpt_quoted)
 
     message = mainmessage.replace('%', ' ').replace('<nick>', rcpt)
 
-    r = requests.get('http://openstreetmap.org/user/%s/history' % rcpt_quoted)
+    r = requests.get('https://www.openstreetmap.org/user/%s/history' % rcpt_quoted)
+    if r.status_code == 404:
+        logging.debug("User '%s' does not exist, probably was renamed in the meantime" % rcpt)
+        continue
+
     soup = bs4.BeautifulSoup(r.text, 'html.parser')
     changeset = soup.find_all('a')[0]['href']
 
     logging.debug("Last changeset id: %s" % changeset)
 
-    r = requests.get('http://openstreetmap.org/api/0.6%s' % changeset)
+    r = requests.get('https://www.openstreetmap.org/api/0.6%s' % changeset)
     soup = bs4.BeautifulSoup(r.text, 'xml')
 
     tags = {k['k']: k['v'] for k in soup.find_all('tag')}
@@ -167,6 +177,6 @@ for user in userurls[ind+1:]:
         osm_send(browser, 'Privitanie', message, rcpt_quoted)
     else:
         logging.debug('NOT sending (because you said so) the message to user %s' % rcpt)
-    if not options.u:
+    if not options.u and not options.nosend:
         with open(statusfile, 'w', encoding='utf-8') as f:
             f.write(user)
