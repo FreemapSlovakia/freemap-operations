@@ -548,7 +548,7 @@ def get_osm_city(query):
         "object_id",
     )
     for feature in data["features"]:
-        obj_id = str(feature["id"])
+        obj_id = str(feature["properties"]["id"])
         geometry_type = feature["geometry"]["type"]
         if geometry_type == "Point":
             element_type = "n"
@@ -560,7 +560,7 @@ def get_osm_city(query):
         feature["properties"] = {
             x: feature["properties"][x] for x in feature["properties"] if x in to_keep
         }
-    return gpd.read_file(str(data))
+    return gpd.read_file(json.dumps(data))
 
 
 def save_osm_buildings(buildings_json, polygons):
@@ -912,14 +912,10 @@ if __name__ == "__main__":
         "Robim prienik budov a adresnych bodov a pridavam pomocny tag (dont_tag_buildings2=true/false)"
     )
     buildings_gdf = gpd.read_file(buildings_json)
-    buildings_gdf.set_index(pd.json_normalize(json.load(open(buildings_json))["features"])["id"].values, inplace=True)
+    buildings_gdf.set_index(pd.json_normalize(json.load(open(buildings_json))["features"])["properties.id"].values, inplace=True)
     addrnodes_gdf = gpd.read_file(addrnodes_json)
 
-    # keep only linestrings, then convert lines to polygons
-    buildings_gdf = buildings_gdf[buildings_gdf.geometry.type == "LineString"]
-    polygon_geometry_buildings = buildings_gdf.geometry.apply(shapely.geometry.Polygon)
-    buildings_gdf = buildings_gdf.assign(polygon_geometry=polygon_geometry_buildings)
-    buildings_gdf = buildings_gdf.set_geometry(polygon_geometry_buildings)
+    polygon_geometry_buildings = buildings_gdf[buildings_gdf.geometry.type == "Polygon"]
 
     # potrebujeme zoznam budov, ktore nebude import brat do uvahy, pretoze
     # sa na nich nachadza adresny bod, preto urobime ich prienik
@@ -933,7 +929,7 @@ if __name__ == "__main__":
         buildings_gdf, city_gdf, how="right", predicate="intersects", lsuffix="x", rsuffix="y"
     )
 
-    buildings_gdf.loc[:, ('geometry')].to_file('/tmp/buildings')
+    # buildings_gdf.loc[:, ('geometry')].to_file('/tmp/buildings')
     z2 = z2.assign(dont_tag_buildings2=(z2.groupby(z2.index_x).transform("count").lon / 2) > 1)
     z2 = z2.rename(
         columns={
