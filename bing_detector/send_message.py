@@ -18,7 +18,7 @@ currdir = os.path.dirname(sys.argv[0])
 os.chdir(currdir)
 
 # only send message to user if the last message was sent N or more days ago
-days_rest = 10
+days_rest = 3650
 
 cookies = {}
 
